@@ -1,4 +1,5 @@
 import requests
+from requests.exceptions import HTTPError
 from typing import Dict, Any, Optional
 from ..settings import config
 
@@ -20,6 +21,11 @@ def get(url: str, params_map: Optional[Dict[str, Any]] = None) -> Dict[str, Any]
     """GET request interface"""
     headers = _get_headers()
     response = requests.get(url, params=params_map, headers=headers)
+    try:
+        response.raise_for_status()
+    except HTTPError as e:
+        error_msg = f"HTTP GET request failed: {e.response.status_code} {e.response.reason} for URL: {url}"
+        raise Exception(error_msg) from e
     return response.json()
 
 
@@ -27,6 +33,11 @@ def post(url: str, params_map: Optional[Dict[str, Any]] = None, body_map: Option
     """POST request interface"""
     headers = _get_headers()
     response = requests.post(url, params=params_map, json=body_map, headers=headers)
+    try:
+        response.raise_for_status()
+    except HTTPError as e:
+        error_msg = f"HTTP POST request failed: {e.response.status_code} {e.response.reason} for URL: {url}"
+        raise Exception(error_msg) from e
     return response.json()
 
 
@@ -34,6 +45,11 @@ def delete(url: str, params_map: Optional[Dict[str, Any]] = None) -> Dict[str, A
     """DELETE request interface"""
     headers = _get_headers()
     response = requests.delete(url, params=params_map, headers=headers)
+    try:
+        response.raise_for_status()
+    except HTTPError as e:
+        error_msg = f"HTTP DELETE request failed: {e.response.status_code} {e.response.reason} for URL: {url}"
+        raise Exception(error_msg) from e
     return response.json()
 
 
