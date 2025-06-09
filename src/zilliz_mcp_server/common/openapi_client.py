@@ -2,7 +2,7 @@ import requests
 from requests.exceptions import HTTPError
 from typing import Dict, Any, Optional
 from urllib.parse import urljoin
-from ..settings import config
+from zilliz_mcp_server.settings import config
 
 
 def _get_headers() -> Dict[str, str]:
