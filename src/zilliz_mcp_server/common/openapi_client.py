@@ -63,6 +63,10 @@ def delete(url: str, params_map: Optional[Dict[str, Any]] = None) -> Dict[str, A
 
 def control_plane_api_request(uri: str, params_map: Optional[Dict[str, Any]] = None, body_map: Optional[Dict[str, Any]] = None, method: str = "GET") -> Dict[str, Any]:
     """Control Plane API request"""
+    # Validate required parameters
+    if not uri or not uri.strip():
+        raise ValueError("uri is required and cannot be empty")
+    
     url = urljoin(config.cloud_uri, uri)
     
     if method.upper() == "GET":
@@ -77,6 +81,14 @@ def control_plane_api_request(uri: str, params_map: Optional[Dict[str, Any]] = N
 
 def data_plane_api_request(uri: str, cluster_id: str, region_id: str, params_map: Optional[Dict[str, Any]] = None, body_map: Optional[Dict[str, Any]] = None, method: str = "GET") -> Dict[str, Any]:
     """Data Plane API request"""
+    # Validate required parameters
+    if not uri or not uri.strip():
+            raise ValueError("uri is required and cannot be empty")
+    if not cluster_id or not cluster_id.strip():
+        raise ValueError("cluster_id is required and cannot be empty")
+    if not region_id or not region_id.strip():
+        raise ValueError("region_id is required and cannot be empty")
+    
     cluster_endpoint = config.cluster_endpoint.replace("${CLUSTER_ID}", cluster_id).replace("${CLOUD_REGION}", region_id)
     url = urljoin(cluster_endpoint, uri)
     
