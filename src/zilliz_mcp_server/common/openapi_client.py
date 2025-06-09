@@ -83,14 +83,16 @@ def data_plane_api_request(uri: str, cluster_id: str, region_id: str, params_map
     """Data Plane API request"""
     # Validate required parameters
     if not uri or not uri.strip():
-            raise ValueError("uri is required and cannot be empty")
+        raise ValueError("uri is required and cannot be empty")
     if not cluster_id or not cluster_id.strip():
         raise ValueError("cluster_id is required and cannot be empty")
     if not region_id or not region_id.strip():
         raise ValueError("region_id is required and cannot be empty")
     
-    cluster_endpoint = config.cluster_endpoint.replace("${CLUSTER_ID}", cluster_id).replace("${CLOUD_REGION}", region_id)
+    cluster_endpoint = config.cluster_endpoint.replace("{CLUSTER_ID}", cluster_id).replace("{CLOUD_REGION}", region_id)
+    print(cluster_endpoint)
     url = urljoin(cluster_endpoint, uri)
+    print(url)
     
     if method.upper() == "GET":
         return get(url, params_map)
