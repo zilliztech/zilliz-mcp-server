@@ -1,6 +1,7 @@
 import requests
 from requests.exceptions import HTTPError
 from typing import Dict, Any, Optional
+from urllib.parse import urljoin
 from ..settings import config
 
 
@@ -17,45 +18,52 @@ def _get_headers() -> Dict[str, str]:
     return headers
 
 
+def _parse_response(response) -> Dict[str, Any]:
+    """Parse response content safely"""    
+    if not response.content:
+        return {}
+    
+    # Try to parse response as JSON, raise exception if parsing fails
+    try:
+        json_data = response.json()
+    except ValueError as e:
+        raise Exception(f"Failed to parse response as JSON: {str(e)}") from e
+    
+    # Check business code, raise business exception if code != 0
+    if 'code' in json_data and json_data['code'] != 0:
+        error_message = json_data.get('message', 'Unknown business error')
+        raise Exception(f"Business error: {error_message}")
+    
+    return json_data
+
+
 def get(url: str, params_map: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """GET request interface"""
     headers = _get_headers()
     response = requests.get(url, params=params_map, headers=headers)
-    try:
-        response.raise_for_status()
-    except HTTPError as e:
-        error_msg = f"HTTP GET request failed: {e.response.status_code} {e.response.reason} for URL: {url}"
-        raise Exception(error_msg) from e
-    return response.json()
+    response.raise_for_status()
+    return _parse_response(response)
 
 
 def post(url: str, params_map: Optional[Dict[str, Any]] = None, body_map: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """POST request interface"""
     headers = _get_headers()
     response = requests.post(url, params=params_map, json=body_map, headers=headers)
-    try:
-        response.raise_for_status()
-    except HTTPError as e:
-        error_msg = f"HTTP POST request failed: {e.response.status_code} {e.response.reason} for URL: {url}"
-        raise Exception(error_msg) from e
-    return response.json()
+    response.raise_for_status()
+    return _parse_response(response)
 
 
 def delete(url: str, params_map: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """DELETE request interface"""
     headers = _get_headers()
     response = requests.delete(url, params=params_map, headers=headers)
-    try:
-        response.raise_for_status()
-    except HTTPError as e:
-        error_msg = f"HTTP DELETE request failed: {e.response.status_code} {e.response.reason} for URL: {url}"
-        raise Exception(error_msg) from e
-    return response.json()
+    response.raise_for_status()
+    return _parse_response(response)
 
 
 def control_plane_api_request(uri: str, params_map: Optional[Dict[str, Any]] = None, body_map: Optional[Dict[str, Any]] = None, method: str = "GET") -> Dict[str, Any]:
     """Control Plane API request"""
-    url = config.cloud_uri + uri
+    url = urljoin(config.cloud_uri, uri)
     
     if method.upper() == "GET":
         return get(url, params_map)
@@ -70,7 +78,7 @@ def control_plane_api_request(uri: str, params_map: Optional[Dict[str, Any]] = N
 def data_plane_api_request(uri: str, cluster_id: str, region_id: str, params_map: Optional[Dict[str, Any]] = None, body_map: Optional[Dict[str, Any]] = None, method: str = "GET") -> Dict[str, Any]:
     """Data Plane API request"""
     cluster_endpoint = config.cluster_endpoint.replace("${CLUSTER_ID}", cluster_id).replace("${CLOUD_REGION}", region_id)
-    url = cluster_endpoint + uri
+    url = urljoin(cluster_endpoint, uri)
     
     if method.upper() == "GET":
         return get(url, params_map)
