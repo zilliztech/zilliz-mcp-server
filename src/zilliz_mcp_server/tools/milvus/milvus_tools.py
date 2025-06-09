@@ -6,7 +6,7 @@ from zilliz_mcp_server.app import zilliz_mcp
 
 
 @zilliz_mcp.tool()
-def list_databases(cluster_id: str, region_id: str) -> List[str]:
+async def list_databases(cluster_id: str, region_id: str) -> List[str]:
     """
     List all databases in the current cluster.
     
@@ -44,7 +44,7 @@ def list_databases(cluster_id: str, region_id: str) -> List[str]:
 
 
 @zilliz_mcp.tool()
-def list_collections(cluster_id: str, region_id: str, db_name: str = "default") -> List[str]:
+async def list_collections(cluster_id: str, region_id: str, db_name: str = "default") -> List[str]:
     """
     List all collection names in the specified database.
     
@@ -86,7 +86,7 @@ def list_collections(cluster_id: str, region_id: str, db_name: str = "default") 
 
 
 @zilliz_mcp.tool()
-def create_collection(
+async def create_collection(
     cluster_id: str, 
     region_id: str, 
     collection_name: str, 

@@ -90,9 +90,7 @@ def data_plane_api_request(uri: str, cluster_id: str, region_id: str, params_map
         raise ValueError("region_id is required and cannot be empty")
     
     cluster_endpoint = config.cluster_endpoint.replace("{CLUSTER_ID}", cluster_id).replace("{CLOUD_REGION}", region_id)
-    print(cluster_endpoint)
     url = urljoin(cluster_endpoint, uri)
-    print(url)
     
     if method.upper() == "GET":
         return get(url, params_map)
