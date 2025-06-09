@@ -289,3 +289,6 @@ development/
 docs/build/
 docs/_build/
 site/ 
+
+# test files
+src/test/
