@@ -15,10 +15,14 @@ load_dotenv()
 class ZillizConfig:
     """Zilliz Cloud configuration."""
     
-    cloud_uri: str = os.getenv("ZILLIZ_CLOUD_URI", "https://api.cloud.zilliz.com/v2/clouds")
+    cloud_uri: str = os.getenv("ZILLIZ_CLOUD_URI", "https://api.cloud.zilliz.com")
     cluster_endpoint: str = os.getenv("ZILLIZ_CLOUD_CLUSTER_ENDPOINT", "")
     token: str = os.getenv("ZILLIZ_CLOUD_TOKEN", "")
     free_cluster_region: str = os.getenv("ZILLIZ_CLOUD_FREE_CLUSTER_REGION", "gcp-us-west1")
+    
+    # MCP Server configuration
+    mcp_server_port: int = int(os.getenv("MCP_SERVER_PORT", "8000"))
+    mcp_server_host: str = os.getenv("MCP_SERVER_HOST", "localhost")
 
 
 # Global config instance

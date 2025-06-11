@@ -68,10 +68,13 @@ def control_plane_api_request(uri: str, params_map: Optional[Dict[str, Any]] = N
         raise ValueError("uri is required and cannot be empty")
     
     # Ensure proper URL joining by removing leading slash from uri and ensuring base ends with slash
+    print(uri)
     base_url = config.cloud_uri.rstrip('/') + '/'
+    print(base_url)
     clean_uri = uri.lstrip('/')
+    print(clean_uri)
     url = urljoin(base_url, clean_uri)
-    
+    print(url)
     if method.upper() == "GET":
         return get(url, params_map)
     elif method.upper() == "POST":
@@ -99,6 +102,7 @@ def data_plane_api_request(uri: str, cluster_id: str, region_id: str, params_map
     base_url = cluster_endpoint.rstrip('/') + '/'
     clean_uri = uri.lstrip('/')
     url = urljoin(base_url, clean_uri)
+    print(url)
     
     if method.upper() == "GET":
         return get(url, params_map)

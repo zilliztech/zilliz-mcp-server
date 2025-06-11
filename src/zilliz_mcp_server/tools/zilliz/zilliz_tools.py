@@ -218,6 +218,74 @@ async def describe_cluster(cluster_id: str) -> Dict[str, Any]:
     except Exception as e:
         raise Exception(f"Failed to describe cluster: {str(e)}") from e
 
+@zilliz_mcp.tool()
+async def suspend_cluster(cluster_id: str) -> Dict[str, Any]:
+    """
+    Suspend a dedicated cluster in Zilliz Cloud.
+    
+    Args:
+        cluster_id: ID of the cluster to suspend
+    Returns:
+        Dict containing cluster suspension info
+        Example:
+        {
+            "cluster_id": "inxx-xxxxxxxxxxxxxxx",
+            "prompt": "Successfully Submitted. The cluster will not incur any computing costs when suspended. You will only be billed for the storage costs during this time."
+        }
+        
+    """
+    try:
+        # Build URI with cluster_id as path parameter
+        uri = f"/v2/clusters/{cluster_id}/suspend"
+        
+        response = openapi_client.control_plane_api_request(uri, method="POST")
+        
+        # Extract and format the response data
+        data = response.get('data', {})
+        cluster_info = {
+            'cluster_id': data.get('clusterId', cluster_id),
+            'prompt': data.get('prompt', 'Cluster suspension request submitted')
+        }
+        
+        return cluster_info
+        
+    except Exception as e:
+        raise Exception(f"Failed to suspend cluster: {str(e)}") from e
+
+@zilliz_mcp.tool()
+async def resume_cluster(cluster_id: str) -> Dict[str, Any]:
+    """
+    Resume a dedicated cluster in Zilliz Cloud.
+    
+    Args:
+        cluster_id: ID of the cluster to resume
+    Returns:
+        Dict containing cluster resumption info
+        Example:
+        {
+            "cluster_id": "inxx-xxxxxxxxxxxxxxx",
+            "prompt": "successfully Submitted. Cluster is being resumed, which is expected to takes several minutes. You can access data about the creation progress and status of your cluster by DescribeCluster API. Once the cluster status is RUNNING, you may access your vector database using the SDK."
+        }
+        
+    """
+    try:
+        # Build URI with cluster_id as path parameter
+        uri = f"/v2/clusters/{cluster_id}/resume"
+        
+        response = openapi_client.control_plane_api_request(uri, method="POST")
+        
+        # Extract and format the response data
+        data = response.get('data', {})
+        cluster_info = {
+            'cluster_id': data.get('clusterId', cluster_id),
+            'prompt': data.get('prompt', 'Cluster resumption request submitted')
+        }
+        
+        return cluster_info
+        
+    except Exception as e:
+        raise Exception(f"Failed to resume cluster: {str(e)}") from e
+
 
 
 

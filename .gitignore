@@ -288,7 +288,4 @@ development/
 # Documentation build
 docs/build/
 docs/_build/
-site/ 
-
-# test files
-src/test/
+site/
