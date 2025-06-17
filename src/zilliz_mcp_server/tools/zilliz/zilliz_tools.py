@@ -1,6 +1,6 @@
 """Zilliz Control Plane tools."""
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional, Union
 from zilliz_mcp_server.common import openapi_client
 from zilliz_mcp_server.settings import config
 from zilliz_mcp_server.app import zilliz_mcp
@@ -285,6 +285,117 @@ async def resume_cluster(cluster_id: str) -> Dict[str, Any]:
         
     except Exception as e:
         raise Exception(f"Failed to resume cluster: {str(e)}") from e
+
+@zilliz_mcp.tool()
+async def query_cluster_metrics(
+    cluster_id: str,
+    start: Optional[str] = None,
+    end: Optional[str] = None,
+    period: Optional[str] = None,
+    granularity: str = "PT30S",
+    metric_queries: List[Dict[str, str]] = []
+) -> Dict[str, Any]:
+    """
+    Query the metrics of a specific cluster.
+    
+    Args:
+        cluster_id: ID of the target cluster
+        start: Starting date and time in ISO 8601 timestamp format (optional, use with end)
+        end: Ending date and time in ISO 8601 timestamp format (optional, use with start)
+        period: Duration in ISO 8601 duration format (optional, use when start/end not set)
+        granularity: Time interval for metrics reporting in ISO 8601 duration format (minimum PT30S)
+        metric_queries: List of metric queries, each containing 'metricName' and 'stat' fields
+            - metricName: Name of the metric. Available options:
+                * CU_COMPUTATION - Compute unit computation usage
+                * CU_CAPACITY - Compute unit capacity
+                * STORAGE_USE - Storage usage
+                * REQ_INSERT_COUNT - Insert request count
+                * REQ_BULK_INSERT_COUNT - Bulk insert request count
+                * REQ_UPSERT_COUNT - Upsert request count
+                * REQ_DELETE_COUNT - Delete request count
+                * REQ_SEARCH_COUNT - Search request count
+                * REQ_QUERY_COUNT - Query request count
+                * VECTOR_REQ_INSERT_COUNT - Vector insert request count
+                * VECTOR_REQ_UPSERT_COUNT - Vector upsert request count
+                * VECTOR_REQ_SEARCH_COUNT - Vector search request count
+                * REQ_INSERT_LATENCY_P99 - Insert request latency P99
+                * REQ_BULK_INSERT_LATENCY_P99 - Bulk insert request latency P99
+                * REQ_UPSERT_LATENCY_P99 - Upsert request latency P99
+                * REQ_DELETE_LATENCY_P99 - Delete request latency P99
+                * REQ_SEARCH_LATENCY_P99 - Search request latency P99
+                * REQ_QUERY_LATENCY_P99 - Query request latency P99
+                * REQ_SUCCESS_RATE - Request success rate
+                * REQ_FAIL_RATE - Request failure rate
+                * REQ_FAIL_RATE_INSERT - Insert request failure rate
+                * REQ_FAIL_RATE_BULK_INSERT - Bulk insert request failure rate
+                * REQ_FAIL_RATE_UPSERT - Upsert request failure rate
+                * REQ_FAIL_RATE_DELETE - Delete request failure rate
+                * REQ_FAIL_RATE_SEARCH - Search request failure rate
+                * REQ_FAIL_RATE_QUERY - Query request failure rate
+                * ENTITIES_LOADED - Number of loaded entities
+                * ENTITIES_INSERT_RATE - Entity insert rate
+                * COLLECTIONS_COUNT - Collection count
+                * ENTITIES_COUNT - Total entity count
+            - stat: Statistical method (AVG for average, P99 for 99th percentile - P99 only valid for latency metrics)
+    Returns:
+        Dict containing cluster metrics data
+        Example:
+        {
+            "code": 0,
+            "data": {
+                "results": [
+                    {
+                        "name": "CU_COMPUTATION",
+                        "stat": "AVG", 
+                        "unit": "percent",
+                        "values": [
+                            {
+                                "timestamp": "2024-06-30T16:09:53Z",
+                                "value": "1.00"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+        
+    """
+    try:
+        # Build URI with cluster_id as path parameter
+        uri = f"/v2/clusters/{cluster_id}/metrics/query"
+        
+        # Build request body
+        body = {
+            'granularity': granularity,
+            'metricQueries': []
+        }
+        
+        # Add time parameters (either start/end or period)
+        if start and end:
+            body['start'] = start
+            body['end'] = end
+        elif period:
+            body['period'] = period
+        else:
+            raise ValueError("Either provide both 'start' and 'end', or provide 'period'")
+        
+        # Format metric queries
+        for metric_query in metric_queries:
+            if 'metricName' not in metric_query or 'stat' not in metric_query:
+                raise ValueError("Each metric query must contain 'metricName' and 'stat' fields")
+            
+            formatted_query = {
+                'name': metric_query['metricName'],
+                'stat': metric_query['stat']
+            }
+            body['metricQueries'].append(formatted_query)
+        
+        response = openapi_client.control_plane_api_request(uri, body_map=body, method="POST")
+        
+        return response
+        
+    except Exception as e:
+        raise Exception(f"Failed to query cluster metrics: {str(e)}") from e
 
 
 

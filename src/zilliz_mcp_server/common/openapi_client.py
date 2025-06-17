@@ -81,7 +81,7 @@ def control_plane_api_request(uri: str, params_map: Optional[Dict[str, Any]] = N
         raise ValueError(f"Unsupported method: {method}")
 
 
-def data_plane_api_request(uri: str, cluster_id: str, region_id: str, params_map: Optional[Dict[str, Any]] = None, body_map: Optional[Dict[str, Any]] = None, method: str = "GET") -> Dict[str, Any]:
+def data_plane_api_request(endpoint:str, uri: str, cluster_id: str, region_id: str, params_map: Optional[Dict[str, Any]] = None, body_map: Optional[Dict[str, Any]] = None, method: str = "GET") -> Dict[str, Any]:
     """Data Plane API request"""
     # Validate required parameters
     if not uri or not uri.strip():
@@ -93,9 +93,9 @@ def data_plane_api_request(uri: str, cluster_id: str, region_id: str, params_map
     if not config.cluster_endpoint or not config.cluster_endpoint.strip():
         raise ValueError("cluster_endpoint is required and cannot be empty")
     
-    cluster_endpoint = config.cluster_endpoint.replace("{CLUSTER_ID}", cluster_id).replace("{CLOUD_REGION}", region_id)
+    #cluster_endpoint = config.cluster_endpoint.replace("{CLUSTER_ID}", cluster_id).replace("{CLOUD_REGION}", region_id)
     # Ensure proper URL joining by removing leading slash from uri and ensuring base ends with slash
-    base_url = cluster_endpoint.rstrip('/') + '/'
+    base_url = endpoint.rstrip('/') + '/'
     clean_uri = uri.lstrip('/')
     url = urljoin(base_url, clean_uri)
     
