@@ -39,7 +39,31 @@ ZILLIZ_API_KEY="your_api_key_here"
 
 You can start the server in two ways:
 
-### 4.1. Streamable HTTP
+
+### 4.1. Standard I/O (StdIO)
+
+This method is useful when the agent and the MCP server are running on the same machine and you want the agent to manage the server's lifecycle directly. The agent communicates with the server over its standard input and output streams.
+
+Configure your agent's MCP JSON file like this:
+
+```json
+{
+  "mcpServers": {
+    "zilliz-mcp-server": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/path/to/your/zilliz-mcp-server",
+        "run",
+        "server.py"
+      ]
+    }
+  }
+}
+```
+*Note: Make sure to replace `/path/to/your/zilliz-mcp-server` with the actual absolute path to the project directory.*
+
+### 4.2. Streamable HTTP
 
 This method runs the server as a standalone HTTP service. This is useful for development and for agents that can communicate over HTTP.
 
@@ -62,29 +86,6 @@ You can then configure your agent or MCP client to connect to it using a configu
   }
 }
 ```
-
-### 4.2. Standard I/O (StdIO)
-
-This method is useful when the agent and the MCP server are running on the same machine and you want the agent to manage the server's lifecycle directly. The agent communicates with the server over its standard input and output streams.
-
-Configure your agent's MCP JSON file like this:
-
-```json
-{
-  "mcpServers": {
-    "zilliz-mcp-server": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        "/path/to/your/zilliz-mcp-server",
-        "run",
-        "server.py"
-      ]
-    }
-  }
-}
-```
-*Note: Make sure to replace `/path/to/your/zilliz-mcp-server` with the actual absolute path to the project directory.*
 
 ## 5. Available Tools
 
