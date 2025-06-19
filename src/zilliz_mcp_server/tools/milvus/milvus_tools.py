@@ -1,12 +1,18 @@
 """Milvus Data Plane tools."""
+import json
+import logging
 from typing import Dict, Any, List, Optional, Union
 from zilliz_mcp_server.common import openapi_client
 from zilliz_mcp_server.settings import config
 from zilliz_mcp_server.app import zilliz_mcp
 
+# Configure logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 
 @zilliz_mcp.tool()
-async def list_databases(cluster_id: str, region_id: str, endpoint: str) -> List[str]:
+async def list_databases(cluster_id: str, region_id: str, endpoint: str) -> str:
     """
     List all databases in the current cluster.
     
@@ -24,6 +30,9 @@ async def list_databases(cluster_id: str, region_id: str, endpoint: str) -> List
         
     """
     try:
+        # Log request
+        logger.info(f"LIST_DATABASES: endpoint={endpoint}, cluster_id={cluster_id}")
+        
         # Build request body (empty for list databases)
         body = {}
         
@@ -39,14 +48,18 @@ async def list_databases(cluster_id: str, region_id: str, endpoint: str) -> List
         # Extract database names from response
         databases = response.get('data', [])
         
-        return databases
+        # Log results
+        logger.info(f"LIST_DATABASES RESULT: {databases}")
+        
+        return json.dumps(databases)
         
     except Exception as e:
+        logger.error(f"LIST_DATABASES ERROR: {str(e)}")
         raise Exception(f"Failed to list databases: {str(e)}") from e
 
 
 @zilliz_mcp.tool()
-async def list_collections(cluster_id: str, region_id: str, endpoint: str, db_name: str = "") -> List[str]:
+async def list_collections(cluster_id: str, region_id: str, endpoint: str, db_name: str = "") -> str:
     """
     List all collection names in the specified database.
     
@@ -56,13 +69,10 @@ async def list_collections(cluster_id: str, region_id: str, endpoint: str, db_na
         endpoint: The cluster endpoint URL. Can be obtained by calling describe_cluster and using the connect_address field
         db_name: The name of an existing database. Pass explicit dbName or leave empty when cluster is free or serverless
     Returns:
-        List of collection names
+        JSON string containing list of collection names
         Example:
-        [
-            "quick_setup_new",
-            "customized_setup_1", 
-            "customized_setup_2"
-        ]
+        '["quick_setup_new", "customized_setup_1", "customized_setup_2"]'
+        If no collections found, returns: '[]'
         
     """
     try:
@@ -70,6 +80,9 @@ async def list_collections(cluster_id: str, region_id: str, endpoint: str, db_na
         body = {}
         if db_name:
             body["dbName"] = db_name
+        
+        # Log request
+        logger.info(f"LIST_COLLECTIONS: endpoint={endpoint}, cluster_id={cluster_id}, db_name={db_name}")
         
         response = openapi_client.data_plane_api_request(
             endpoint=endpoint,
@@ -83,9 +96,16 @@ async def list_collections(cluster_id: str, region_id: str, endpoint: str, db_na
         # Extract collection names from response
         collections = response.get('data', [])
         
-        return collections
+        # Serialize to JSON string
+        collections_json = json.dumps(collections)
+        
+        # Log results
+        logger.info(f"LIST_COLLECTIONS RESULT: {collections}")
+        
+        return collections_json
         
     except Exception as e:
+        logger.error(f"LIST_COLLECTIONS ERROR: {str(e)}")
         raise Exception(f"Failed to list collections: {str(e)}") from e
 
 
@@ -97,12 +117,12 @@ async def create_collection(
     collection_name: str, 
     dimension: int,
     db_name: str = "",
-    metric_type: str = "L2",
+    metric_type: str = "COSINE",
     id_type: str = "Int64",
     auto_id: bool = True,
     primary_field_name: str = "id",
     vector_field_name: str = "vector"
-) -> Dict[str, Any]:
+) -> str:
     """
     Create a collection in a specified cluster using Quick Setup.
     
@@ -128,6 +148,9 @@ async def create_collection(
         
     """
     try:
+        # Log request
+        logger.info(f"CREATE_COLLECTION: collection_name={collection_name}, dimension={dimension}, cluster_id={cluster_id}")
+        
         # Build request body for Quick Setup
         body = {
             "collectionName": collection_name,
@@ -158,9 +181,13 @@ async def create_collection(
             method="POST"
         )
         
-        return response
+        # Log results
+        logger.info(f"CREATE_COLLECTION RESULT: collection created successfully")
+        
+        return json.dumps(response)
         
     except Exception as e:
+        logger.error(f"CREATE_COLLECTION ERROR: {str(e)}")
         raise Exception(f"Failed to create collection: {str(e)}") from e
 
 
@@ -171,7 +198,7 @@ async def describe_collection(
     endpoint: str,
     collection_name: str,
     db_name: str = ""
-) -> Dict[str, Any]:
+) -> str:
     """
     Describe the details of a collection.
     
@@ -235,6 +262,9 @@ async def describe_collection(
         
     """
     try:
+        # Log request
+        logger.info(f"DESCRIBE_COLLECTION: collection_name={collection_name}, cluster_id={cluster_id}")
+        
         # Build request body
         body = {
             "collectionName": collection_name
@@ -253,9 +283,15 @@ async def describe_collection(
             method="POST"
         )
         
-        return response
+        # Log results
+        data = response.get('data', {})
+        fields_count = len(data.get('fields', []))
+        logger.info(f"DESCRIBE_COLLECTION RESULT: {fields_count} fields found")
+        
+        return json.dumps(response)
         
     except Exception as e:
+        logger.error(f"DESCRIBE_COLLECTION ERROR: {str(e)}")
         raise Exception(f"Failed to describe collection: {str(e)}") from e
 
 
@@ -267,7 +303,7 @@ async def insert_entities(
     collection_name: str,
     data: Union[Dict[str, Any], List[Dict[str, Any]]],
     db_name: str = ""
-) -> Dict[str, Any]:
+) -> str:
     """
     Insert data into a specific collection.
     
@@ -291,6 +327,10 @@ async def insert_entities(
         
     """
     try:
+        # Log request
+        data_count = len(data) if isinstance(data, list) else 1
+        logger.info(f"INSERT_ENTITIES: collection_name={collection_name}, data_count={data_count}, cluster_id={cluster_id}")
+        
         # Build request body
         body = {
             "collectionName": collection_name,
@@ -310,9 +350,15 @@ async def insert_entities(
             method="POST"
         )
         
-        return response
+        # Log results
+        response_data = response.get('data', {})
+        insert_count = response_data.get('insertCount', 0)
+        logger.info(f"INSERT_ENTITIES RESULT: {insert_count} entities inserted")
+        
+        return json.dumps(response)
         
     except Exception as e:
+        logger.error(f"INSERT_ENTITIES ERROR: {str(e)}")
         raise Exception(f"Failed to insert data: {str(e)}") from e
 
 
@@ -325,7 +371,7 @@ async def delete_entities(
     filter: str,
     db_name: str = "",
     partition_name: str = ""
-) -> Dict[str, Any]:
+) -> str:
     """
     Delete entities from a collection by filtering conditions or primary keys.
     
@@ -348,6 +394,9 @@ async def delete_entities(
         
     """
     try:
+        # Log request
+        logger.info(f"DELETE_ENTITIES: collection_name={collection_name}, filter={filter}, cluster_id={cluster_id}")
+        
         # Build request body
         body = {
             "collectionName": collection_name,
@@ -371,9 +420,13 @@ async def delete_entities(
             method="POST"
         )
         
-        return response
+        # Log results
+        logger.info(f"DELETE_ENTITIES RESULT: deletion completed")
+        
+        return json.dumps(response)
         
     except Exception as e:
+        logger.error(f"DELETE_ENTITIES ERROR: {str(e)}")
         raise Exception(f"Failed to delete entities: {str(e)}") from e
 
 
@@ -395,7 +448,7 @@ async def search(
     search_params: Optional[Dict[str, Any]] = None,
     partition_names: Optional[List[str]] = None,
     consistency_level: str = ""
-) -> Dict[str, Any]:
+) -> str:
     """
     Conduct a vector similarity search with an optional scalar filtering expression.
     
@@ -437,6 +490,10 @@ async def search(
         
     """
     try:
+        # Log request
+        vectors_count = len(data)
+        logger.info(f"SEARCH: collection_name={collection_name}, vectors_count={vectors_count}, limit={limit}, cluster_id={cluster_id}")
+        
         # Build request body
         body = {
             "collectionName": collection_name,
@@ -491,9 +548,15 @@ async def search(
             method="POST"
         )
         
-        return response
+        # Log results
+        results = response.get('data', [])
+        results_count = len(results)
+        logger.info(f"SEARCH RESULT: {results_count} results found")
+        
+        return json.dumps(response)
         
     except Exception as e:
+        logger.error(f"SEARCH ERROR: {str(e)}")
         raise Exception(f"Failed to search entities: {str(e)}") from e
 
 
@@ -507,9 +570,9 @@ async def query(
     db_name: str = "",
     output_fields: Optional[List[str]] = None,
     partition_names: Optional[List[str]] = None,
-    limit: Optional[int] = None,
+    limit: int = 100,
     offset: int = 0
-) -> Dict[str, Any]:
+) -> str:
     """
     Conduct a filtering on the scalar field with a specified boolean expression.
     
@@ -522,7 +585,7 @@ async def query(
         db_name: The name of the database. Pass explicit dbName or leave empty when cluster is free or serverless
         output_fields: An array of fields to return along with the query results
         partition_names: The name of the partitions to which this operation applies. If not set, the operation applies to all partitions in the collection
-        limit: The total number of entities to return. The sum of this value and offset should be less than 16,384
+        limit: The total number of entities to return (default: 10000). The sum of this value and offset should be less than 16,384
         offset: The number of records to skip in the search result. The sum of this value and limit should be less than 16,384
     Returns:
         Dict containing the query results
@@ -548,10 +611,14 @@ async def query(
         
     """
     try:
+        # Log request
+        logger.info(f"QUERY: collection_name={collection_name}, filter={filter}, cluster_id={cluster_id}")
+        
         # Build request body
         body = {
             "collectionName": collection_name,
-            "filter": filter
+            "filter": filter,
+            "limit": limit,
         }
         
         # Add dbName only if provided
@@ -566,9 +633,6 @@ async def query(
         if partition_names:
             body["partitionNames"] = partition_names
             
-        # Add limit only if provided
-        if limit is not None:
-            body["limit"] = limit
             
         # Add offset only if provided and not 0
         if offset > 0:
@@ -583,9 +647,15 @@ async def query(
             method="POST"
         )
         
-        return response
+        # Log results
+        results = response.get('data', [])
+        results_count = len(results)
+        logger.info(f"QUERY RESULT: {results_count} entities found")
+        
+        return json.dumps(response)
         
     except Exception as e:
+        logger.error(f"QUERY ERROR: {str(e)}")
         raise Exception(f"Failed to query entities: {str(e)}") from e
 
 
@@ -603,7 +673,7 @@ async def hybrid_search(
     partition_names: Optional[List[str]] = None,
     output_fields: Optional[List[str]] = None,
     consistency_level: str = ""
-) -> Dict[str, Any]:
+) -> str:
     """
     Search for entities based on vector similarity and scalar filtering and rerank the results using a specified strategy.
     
@@ -648,6 +718,10 @@ async def hybrid_search(
         
     """
     try:
+        # Log request
+        search_requests_count = len(search_requests)
+        logger.info(f"HYBRID_SEARCH: collection_name={collection_name}, search_requests_count={search_requests_count}, strategy={rerank_strategy}, cluster_id={cluster_id}")
+        
         # Build request body
         body = {
             "collectionName": collection_name,
@@ -684,9 +758,15 @@ async def hybrid_search(
             method="POST"
         )
         
-        return response
+        # Log results
+        results = response.get('data', [])
+        results_count = len(results)
+        logger.info(f"HYBRID_SEARCH RESULT: {results_count} results found")
+        
+        return json.dumps(response)
         
     except Exception as e:
+        logger.error(f"HYBRID_SEARCH ERROR: {str(e)}")
         raise Exception(f"Failed to perform hybrid search: {str(e)}") from e
     
     

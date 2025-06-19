@@ -9,7 +9,8 @@ def _get_headers() -> Dict[str, str]:
     """Generate request headers"""
     headers = {
         "accept": "application/json",
-        "content-type": "application/json"
+        "content-type": "application/json",
+        "X-MCP-TRACE": "true"
     }
     
     if config.token:
@@ -90,10 +91,7 @@ def data_plane_api_request(endpoint:str, uri: str, cluster_id: str, region_id: s
         raise ValueError("cluster_id is required and cannot be empty")
     if not region_id or not region_id.strip():
         raise ValueError("region_id is required and cannot be empty")
-    if not config.cluster_endpoint or not config.cluster_endpoint.strip():
-        raise ValueError("cluster_endpoint is required and cannot be empty")
     
-    #cluster_endpoint = config.cluster_endpoint.replace("{CLUSTER_ID}", cluster_id).replace("{CLOUD_REGION}", region_id)
     # Ensure proper URL joining by removing leading slash from uri and ensuring base ends with slash
     base_url = endpoint.rstrip('/') + '/'
     clean_uri = uri.lstrip('/')

@@ -1,31 +1,33 @@
 """Zilliz Control Plane tools."""
 
+import json
+import logging
 from typing import Dict, Any, List, Optional, Union
 from zilliz_mcp_server.common import openapi_client
 from zilliz_mcp_server.settings import config
 from zilliz_mcp_server.app import zilliz_mcp
 
+# Configure logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 @zilliz_mcp.tool()
-async def list_projects() -> List[Dict[str, Any]]:
+async def list_projects() -> str:
     """
     List all projects scoped to API Key in Zilliz Cloud.
     
     Args:
         None
     Returns:
-        Dict containing the API response with projects data
+        JSON string containing the API response with projects data
         Example:
-        [
-            {
-                "project_name": "Default Project",
-                "project_id": "proj-f5b02814db7ccfe2d16293",
-                "instance_count": 0,
-                "create_time": "2023-06-14T06:59:07Z"
-            }
-        ]
+        '[{"project_name": "Default Project", "project_id": "proj-f5b02814db7ccfe2d16293", "instance_count": 0, "create_time": "2023-06-14T06:59:07Z"}]'
         
     """
     try:
+        # Log request
+        logger.info("LIST_PROJECTS: fetching all projects")
+        
         response = openapi_client.control_plane_api_request("/v2/projects")
         projects = response.get('data', [])
         
@@ -39,15 +41,19 @@ async def list_projects() -> List[Dict[str, Any]]:
                 'create_time': project.get('createTime', 'Unknown')
             }
             formatted_projects.append(project_info)
-            
-        return formatted_projects
+        
+        # Log results
+        logger.info(f"LIST_PROJECTS RESULT: found {len(formatted_projects)} projects")
+        
+        return json.dumps(formatted_projects)
         
     except Exception as e:
+        logger.error(f"LIST_PROJECTS ERROR: {str(e)}")
         raise Exception(f"Failed to get projects info: {str(e)}") from e
 
 
 @zilliz_mcp.tool()
-async def list_clusters(page_size: int = 10, current_page: int = 1) -> List[Dict[str, Any]]:
+async def list_clusters(page_size: int = 10, current_page: int = 1) -> str:
     """
     List all clusters scoped to API Key in Zilliz Cloud.
     
@@ -76,6 +82,9 @@ async def list_clusters(page_size: int = 10, current_page: int = 1) -> List[Dict
         
     """
     try:
+        # Log request
+        logger.info(f"LIST_CLUSTERS: page_size={page_size}, current_page={current_page}")
+        
         # Build query parameters
         params = {
             'pageSize': page_size,
@@ -104,14 +113,18 @@ async def list_clusters(page_size: int = 10, current_page: int = 1) -> List[Dict
                 'create_time': cluster.get('createTime', 'Unknown')
             }
             formatted_clusters.append(cluster_info)
-            
-        return formatted_clusters
+        
+        # Log results
+        logger.info(f"LIST_CLUSTERS RESULT: found {len(formatted_clusters)} clusters")
+        
+        return json.dumps(formatted_clusters)
         
     except Exception as e:
+        logger.error(f"LIST_CLUSTERS ERROR: {str(e)}")
         raise Exception(f"Failed to list clusters: {str(e)}") from e
 
 @zilliz_mcp.tool()
-async def create_free_cluster(cluster_name: str, project_id: str) -> Dict[str, Any]:
+async def create_free_cluster(cluster_name: str, project_id: str) -> str:
     """
     Create a free cluster in Zilliz Cloud.
     
@@ -129,6 +142,9 @@ async def create_free_cluster(cluster_name: str, project_id: str) -> Dict[str, A
         
     """
     try:
+        # Log request
+        logger.info(f"CREATE_FREE_CLUSTER: cluster_name={cluster_name}, project_id={project_id}")
+        
         # Get free cluster region_id from config
         region_id = config.free_cluster_region
         
@@ -153,13 +169,17 @@ async def create_free_cluster(cluster_name: str, project_id: str) -> Dict[str, A
             'prompt': data.get('prompt', 'Unknown'),
         }
         
-        return cluster_info
+        # Log results
+        logger.info(f"CREATE_FREE_CLUSTER RESULT: cluster_id={cluster_info['cluster_id']}")
+        
+        return json.dumps(cluster_info)
         
     except Exception as e:
+        logger.error(f"CREATE_FREE_CLUSTER ERROR: {str(e)}")
         raise Exception(f"Failed to create free cluster: {str(e)}") from e
 
 @zilliz_mcp.tool()
-async def describe_cluster(cluster_id: str) -> Dict[str, Any]:
+async def describe_cluster(cluster_id: str) -> str:
     """
     Describe a cluster in detail.
     
@@ -188,6 +208,9 @@ async def describe_cluster(cluster_id: str) -> Dict[str, Any]:
         
     """
     try:
+        # Log request
+        logger.info(f"DESCRIBE_CLUSTER: cluster_id={cluster_id}")
+        
         # Build URI with cluster_id as path parameter
         uri = f"/v2/clusters/{cluster_id}"
         
@@ -213,13 +236,17 @@ async def describe_cluster(cluster_id: str) -> Dict[str, Any]:
             'create_time': data.get('createTime', 'Unknown')
         }
         
-        return cluster_info
+        # Log results
+        logger.info(f"DESCRIBE_CLUSTER RESULT: name={cluster_info['cluster_name']}, status={cluster_info['status']}")
+        
+        return json.dumps(cluster_info)
         
     except Exception as e:
+        logger.error(f"DESCRIBE_CLUSTER ERROR: {str(e)}")
         raise Exception(f"Failed to describe cluster: {str(e)}") from e
 
 @zilliz_mcp.tool()
-async def suspend_cluster(cluster_id: str) -> Dict[str, Any]:
+async def suspend_cluster(cluster_id: str) -> str:
     """
     Suspend a dedicated cluster in Zilliz Cloud.
     
@@ -235,6 +262,9 @@ async def suspend_cluster(cluster_id: str) -> Dict[str, Any]:
         
     """
     try:
+        # Log request
+        logger.info(f"SUSPEND_CLUSTER: cluster_id={cluster_id}")
+        
         # Build URI with cluster_id as path parameter
         uri = f"/v2/clusters/{cluster_id}/suspend"
         
@@ -247,13 +277,17 @@ async def suspend_cluster(cluster_id: str) -> Dict[str, Any]:
             'prompt': data.get('prompt', 'Cluster suspension request submitted')
         }
         
-        return cluster_info
+        # Log results
+        logger.info(f"SUSPEND_CLUSTER RESULT: cluster_id={cluster_info['cluster_id']}")
+        
+        return json.dumps(cluster_info)
         
     except Exception as e:
+        logger.error(f"SUSPEND_CLUSTER ERROR: {str(e)}")
         raise Exception(f"Failed to suspend cluster: {str(e)}") from e
 
 @zilliz_mcp.tool()
-async def resume_cluster(cluster_id: str) -> Dict[str, Any]:
+async def resume_cluster(cluster_id: str) -> str:
     """
     Resume a dedicated cluster in Zilliz Cloud.
     
@@ -269,6 +303,9 @@ async def resume_cluster(cluster_id: str) -> Dict[str, Any]:
         
     """
     try:
+        # Log request
+        logger.info(f"RESUME_CLUSTER: cluster_id={cluster_id}")
+        
         # Build URI with cluster_id as path parameter
         uri = f"/v2/clusters/{cluster_id}/resume"
         
@@ -281,9 +318,13 @@ async def resume_cluster(cluster_id: str) -> Dict[str, Any]:
             'prompt': data.get('prompt', 'Cluster resumption request submitted')
         }
         
-        return cluster_info
+        # Log results
+        logger.info(f"RESUME_CLUSTER RESULT: cluster_id={cluster_info['cluster_id']}")
+        
+        return json.dumps(cluster_info)
         
     except Exception as e:
+        logger.error(f"RESUME_CLUSTER ERROR: {str(e)}")
         raise Exception(f"Failed to resume cluster: {str(e)}") from e
 
 @zilliz_mcp.tool()
@@ -294,7 +335,7 @@ async def query_cluster_metrics(
     period: Optional[str] = None,
     granularity: str = "PT30S",
     metric_queries: List[Dict[str, str]] = []
-) -> Dict[str, Any]:
+) -> str:
     """
     Query the metrics of a specific cluster.
     
@@ -361,6 +402,9 @@ async def query_cluster_metrics(
         
     """
     try:
+        # Log request
+        logger.info(f"QUERY_CLUSTER_METRICS: cluster_id={cluster_id}, metrics_count={len(metric_queries)}")
+        
         # Build URI with cluster_id as path parameter
         uri = f"/v2/clusters/{cluster_id}/metrics/query"
         
@@ -392,9 +436,15 @@ async def query_cluster_metrics(
         
         response = openapi_client.control_plane_api_request(uri, body_map=body, method="POST")
         
-        return response
+        # Log results
+        data = response.get('data', {})
+        results = data.get('results', [])
+        logger.info(f"QUERY_CLUSTER_METRICS RESULT: returned {len(results)} metric results")
+        
+        return json.dumps(response)
         
     except Exception as e:
+        logger.error(f"QUERY_CLUSTER_METRICS ERROR: {str(e)}")
         raise Exception(f"Failed to query cluster metrics: {str(e)}") from e
 
 

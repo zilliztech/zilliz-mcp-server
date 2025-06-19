@@ -19,7 +19,6 @@ class ZillizConfig:
     def __init__(self):
         """Initialize configuration with validation."""
         self.cloud_uri: str = os.getenv("ZILLIZ_CLOUD_URI", "https://api.cloud.zilliz.com")
-        self.cluster_endpoint: str = os.getenv("ZILLIZ_CLOUD_CLUSTER_ENDPOINT", "")
         self.token: str = os.getenv("ZILLIZ_CLOUD_TOKEN", "")
         self.free_cluster_region: str = os.getenv("ZILLIZ_CLOUD_FREE_CLUSTER_REGION", "gcp-us-west1")
         
@@ -43,11 +42,8 @@ class ZillizConfig:
         # Validate cloud URI format only if it's not the default
         if self.cloud_uri and not re.match(r'^https?://', self.cloud_uri):
             raise ValueError("ZILLIZ_CLOUD_URI must be a valid URL starting with http:// or https://")
-        
-        # Validate cluster endpoint format only if provided
-        if self.cluster_endpoint and not re.match(r'^https?://', self.cluster_endpoint):
-            raise ValueError("ZILLIZ_CLOUD_CLUSTER_ENDPOINT must be a valid URL starting with http:// or https://")
-        
+    
+
         # Validate MCP server port range
         if not (1 <= self.mcp_server_port <= 65535):
             raise ValueError("MCP_SERVER_PORT must be between 1 and 65535")
