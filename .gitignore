@@ -289,3 +289,6 @@ development/
 docs/build/
 docs/_build/
 site/
+
+# Claude Code files
+CLAUDE.md

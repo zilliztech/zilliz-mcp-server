@@ -56,6 +56,7 @@ async def list_projects() -> str:
 async def list_clusters(page_size: int = 10, current_page: int = 1) -> str:
     """
     List all clusters scoped to API Key in Zilliz Cloud.
+    If you want to list all clusters, you can set page_size to 100 and current_page to 1.
     
     Args:
         page_size: The number of records to include in each response (default: 10)
