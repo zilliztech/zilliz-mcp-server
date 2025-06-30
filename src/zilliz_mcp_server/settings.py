@@ -8,9 +8,11 @@ import os
 import re
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-# load_dotenv() automatically searches for .env file in current and parent directories
-load_dotenv()
+# Load environment variables from .env file only if it exists in current directory
+# This ensures uvx environment variables take precedence
+import os
+if os.path.exists('.env'):
+    load_dotenv(override=False)  # Don't override existing environment variables
 
 
 class ZillizConfig:
