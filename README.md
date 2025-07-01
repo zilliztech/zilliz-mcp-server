@@ -8,17 +8,19 @@ Model Context Protocol (MCP) is a standardized framework that enables AI applica
 ## 2. Demos
 ### Demo 1: Create a free Milvus cluster with a simple natural language prompt
 ![Create Free Cluster GIF](docs/imgs/create_free_milvus.gif)
-Instead of navigating through web interfaces or complex setup processes, you can get a free, fully functional vector database cluster up and running it directly from Claude, Cursor or any other MCP-compatible AI coding assistants with the Zilliz MCP Server. 
+Instead of navigating through web interfaces or complex setup processes, you can get a free, fully functional vector database cluster up and running it directly from Claude, Cursor or any other MCP-compatible AI coding assistants with the Zilliz MCP Server.   
+
 The Zilliz MCP server automatically:
 - Provisions a free Milvus cluster using Zilliz Cloud
 - Handles authentication and configuration
-- Returns connection details for immediate use
+- Returns connection details for immediate use  
 No need to leave your AI chat interface or manually set up infrastructure. Just ask in natural language and get a working vector database within seconds. This works in any MCP-enabled environment, including Claude's web interface as shown above. 
 
 
 ### Demo 2: Monitor cluster performance without leaving your chat
 ![Checkout My Cluster GIF](docs/imgs/checkout_my_cluster.gif)
-Once you have a cluster running, you can inspect its status and generate visualizations directly through natural language:
+Once you have a cluster running, you can inspect its status and generate visualizations directly through natural language:  
+
 The Zilliz MCP server:
 - Retrieves real-time cluster metrics and collection details
 - Fetches performance data (CPU computation, capacity usage)
@@ -29,6 +31,7 @@ This demonstrates how you can monitor and analyze your vector database infrastru
 ### Demo 3: Perform semantic search directly from your chat
 ![Talk with your Data GIF](docs/imgs/talk_with_your_data.gif)
 Search your vector collections using natural language without writing any code:
+
 The Zilliz MCP server:
 - Performs semantic search across your specified collection
 - Returns relevant results with similarity scores
@@ -40,6 +43,7 @@ This shows how vector search becomes as simple as describing what you're looking
 
 *   **Python**: 3.10 or higher.
 *   **uv**: A fast Python package installer and resolver. If you don't have it, run  `brew install uv` on OSX， or just run `curl -LsSf https://astral.sh/uv/install.sh | sh` .
+*   **A Zilliz Cloud account:** [sign up for free](https://cloud.zilliz.com/signup?utm_source=github&utm_medium=referral&utm_campaign=zilliz-mcp-readme) if you haven't tried Zilliz Cloud before. If you already have one, [sign in](https://cloud.zilliz.com/login) here.
 *   **Zilliz Cloud API Key**: You'll need an API key to interact with Zilliz Cloud. You can get one by following the instructions here: [Manage API Keys](https://docs.zilliz.com/docs/manage-api-keys).
 
 ## 4. Usage
