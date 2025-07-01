@@ -55,13 +55,11 @@ Configure your agent's MCP JSON file like this:
 {
   "mcpServers": {
     "zilliz-mcp-server": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        "/path/to/your/zilliz-mcp-server",
-        "run",
-        "server.py"
-      ]
+      "command": "uvx",
+      "args": ["zilliz-mcp-server"],
+      "env": {
+          "ZILLIZ_CLOUD_TOKEN": "your-token-here"
+      }
     }
   }
 }
