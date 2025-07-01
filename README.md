@@ -2,6 +2,7 @@
 
 ## 1. Zilliz-MCP-Server Overview 
 Model Context Protocol (MCP) is a standardized framework that enables AI applications to securely connect to external data sources and tools in real-time. It acts as a universal interface between AI models and various systems, allowing AI assistants to access current information and perform actions beyond text generation.
+
 **Zilliz MCP Server** enables AI agents to seamlessly interact with [Milvus](https://github.com/milvus-io/milvus), a popular open-source vector database, and [Zilliz Cloud](https://zilliz.com/cloud), the fully managed version of Milvus. Through this integration, your AI assistants can create collections, insert vector data, and perform semantic searches directly within their conversations—no manual database management required. Zilliz MCP Server seamlessly integrates with popular AI-powered coding tools like Cursor, Claude, Windsurf, and other MCP-compatible editors, enabling developers to build vector search capabilities directly within their development workflow.
 
 ## 2. Demos
