@@ -25,7 +25,7 @@ The Zilliz MCP server:
 - Retrieves real-time cluster metrics and collection details
 - Fetches performance data (CPU computation, capacity usage)
 - Generates visualizations on demand
-- All without writing queries or accessing monitoring dashboards
+- All without writing queries or accessing monitoring dashboards  
 This demonstrates how you can monitor and analyze your vector database infrastructure conversationally, making cluster management as simple as asking questions in plain English.
 
 ### Demo 3: Perform semantic search directly from your chat
