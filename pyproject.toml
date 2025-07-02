@@ -1,0 +1,66 @@
+[project]
+name = "zilliz-mcp-server"
+version = "1.0.0"
+description = "MCP server for Zilliz Cloud and Milvus"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    {name = "Zilliz", email = "support@zilliz.com"}
+]
+license = {text = "Apache-2.0"}
+homepage = "https://github.com/zilliztech/zilliz-mcp-server"
+repository = "https://github.com/zilliztech/zilliz-mcp-server"
+documentation = "https://github.com/zilliztech/zilliz-mcp-server#readme"
+keywords = [
+    "mcp",
+    "zilliz", 
+    "milvus",
+    "vector-database",
+    "ai",
+    "rag",
+    "semantic-search",
+    "embeddings"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Database",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Environment :: Console"
+]
+dependencies = [
+    "fastmcp>=2.6.1",
+    "python-dotenv>=1.0.0",
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.0.0",
+    "pytest-mock>=3.14.1",
+    "responses>=0.25.7",
+]
+
+[project.scripts]
+zilliz-mcp-server = "zilliz_mcp_server.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/zilliz_mcp_server"]
+
+[dependency-groups]
+dev = [
+    "build>=1.2.2.post1",
+    "twine>=6.1.0",
+]
