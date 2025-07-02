@@ -14,6 +14,7 @@ The Zilliz MCP server automatically:
 - Provisions a free Milvus cluster using Zilliz Cloud
 - Handles authentication and configuration
 - Returns connection details for immediate use  
+
 No need to leave your AI chat interface or manually set up infrastructure. Just ask in natural language and get a working vector database within seconds. This works in any MCP-enabled environment, including Claude's web interface as shown above. 
 
 
@@ -26,6 +27,7 @@ The Zilliz MCP server:
 - Fetches performance data (CPU computation, capacity usage)
 - Generates visualizations on demand
 - All without writing queries or accessing monitoring dashboards  
+
 This demonstrates how you can monitor and analyze your vector database infrastructure conversationally, making cluster management as simple as asking questions in plain English.
 
 ### Demo 3: Perform semantic search directly from your chat
@@ -36,6 +38,7 @@ The Zilliz MCP server:
 - Performs semantic search across your specified collection
 - Returns relevant results with similarity scores
 - All through conversational interface - no SDK calls or query syntax required
+
 This shows how vector search becomes as simple as describing what you're looking for. Perfect for testing search queries, exploring your data, or building search functionality without leaving your development environment.
 
 
