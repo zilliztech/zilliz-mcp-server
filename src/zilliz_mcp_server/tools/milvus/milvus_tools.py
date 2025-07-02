@@ -459,7 +459,7 @@ async def search(
         collection_name: The name of the collection to which this operation applies
         data: A list of vector embeddings. Zilliz Cloud searches for the most similar vector embeddings to the specified ones
         anns_field: The name of the vector field
-        limit: The total number of entities to return (default: 10). The sum of this value and offset should be less than 16,384
+        limit: The total number of entities to return (default: 10). The sum of this value and offset should be less than 100
         db_name: The name of the database. Pass explicit dbName or leave empty when cluster is free or serverless
         filter: The filter used to find matches for the search
         offset: The number of records to skip in the search result. The sum of this value and limit should be less than 16,384
@@ -585,7 +585,7 @@ async def query(
         db_name: The name of the database. Pass explicit dbName or leave empty when cluster is free or serverless
         output_fields: An array of fields to return along with the query results
         partition_names: The name of the partitions to which this operation applies. If not set, the operation applies to all partitions in the collection
-        limit: The total number of entities to return (default: 10000). The sum of this value and offset should be less than 16,384
+        limit: The total number of entities to return (default: 100). The sum of this value and offset should be less than 16,384
         offset: The number of records to skip in the search result. The sum of this value and limit should be less than 16,384
     Returns:
         Dict containing the query results
