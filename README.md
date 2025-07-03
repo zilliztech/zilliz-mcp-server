@@ -51,6 +51,7 @@ This shows how vector search becomes as simple as describing what you're looking
 
 ## 4. Usage
 You can start the server in two ways:
+
 If you are completely new to MCP and Zilliz, we recommend following our step-by-step guide in [USERGUIDE.md](docs/USERGUIDE.md) which will walk you through the complete setup process.
 
 
