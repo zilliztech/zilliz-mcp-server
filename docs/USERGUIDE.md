@@ -6,13 +6,14 @@ Ensure you have the following prerequisites:
 
 ### Required Components
 
+- **A Zilliz Cloud account**: [Sign up for free here](https://cloud.zilliz.com/signup?utm_source=github&utm_medium=referral&utm_campaign=zilliz-mcp-user-guide) if you don't have one.
 - **Zilliz API Key**
 - **Python**: 3.10 or higher
 - **uv**: Available on your PATH
 
 ### Getting Your Zilliz API Key
 
-1. Log into your Zilliz account
+1. [Log into your Zilliz account](https://cloud.zilliz.com/login)
 2. Open the root page of your organization
 3. Click **'API keys'**
 
