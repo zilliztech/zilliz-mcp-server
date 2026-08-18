@@ -68,12 +68,11 @@ class TestListDatabases:
             "data": ["default", "test_db"]
         }
         
-        result = await list_databases("cluster1", "region1", "https://test.endpoint.com")
+        result = await list_databases("cluster1", "region1")
         result_data = json.loads(result)
         
         assert result_data == ["default", "test_db"]
         mock_client.data_plane_api_request.assert_called_once_with(
-            endpoint="https://test.endpoint.com",
             uri="/v2/vectordb/databases/list",
             cluster_id="cluster1",
             region_id="region1",
@@ -89,7 +88,7 @@ class TestListDatabases:
         mock_client.data_plane_api_request.side_effect = Exception("Connection failed")
         
         with pytest.raises(Exception, match="Failed to list databases: Connection failed"):
-            await list_databases("cluster1", "region1", "https://test.endpoint.com")
+            await list_databases("cluster1", "region1")
 
 
 class TestListCollections:
@@ -105,12 +104,11 @@ class TestListCollections:
             "data": ["collection1", "collection2"]
         }
         
-        result = await list_collections("cluster1", "region1", "https://test.endpoint.com", "test_db")
+        result = await list_collections("cluster1", "region1", "test_db")
         result_data = json.loads(result)
         
         assert result_data == ["collection1", "collection2"]
         mock_client.data_plane_api_request.assert_called_once_with(
-            endpoint="https://test.endpoint.com",
             uri="/v2/vectordb/collections/list",
             cluster_id="cluster1",
             region_id="region1",
@@ -128,10 +126,9 @@ class TestListCollections:
             "data": ["collection1"]
         }
         
-        result = await list_collections("cluster1", "region1", "https://test.endpoint.com")
+        result = await list_collections("cluster1", "region1")
         
         mock_client.data_plane_api_request.assert_called_once_with(
-            endpoint="https://test.endpoint.com",
             uri="/v2/vectordb/collections/list",
             cluster_id="cluster1",
             region_id="region1",
@@ -153,7 +150,6 @@ class TestCreateCollection:
         result = await create_collection(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             dimension=128
         )
@@ -171,7 +167,6 @@ class TestCreateCollection:
             "vectorFieldName": "vector"
         }
         mock_client.data_plane_api_request.assert_called_once_with(
-            endpoint="https://test.endpoint.com",
             uri="/v2/vectordb/collections/create",
             cluster_id="cluster1",
             region_id="region1",
@@ -189,7 +184,6 @@ class TestCreateCollection:
         result = await create_collection(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             dimension=128,
             id_type="VarChar"
@@ -206,7 +200,6 @@ class TestCreateCollection:
             "params": {"max_length": 255}
         }
         mock_client.data_plane_api_request.assert_called_once_with(
-            endpoint="https://test.endpoint.com",
             uri="/v2/vectordb/collections/create",
             cluster_id="cluster1",
             region_id="region1",
@@ -224,7 +217,6 @@ class TestCreateCollection:
         result = await create_collection(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             dimension=128,
             db_name="test_db"
@@ -248,7 +240,6 @@ class TestDescribeCollection:
         result = await describe_collection(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection"
         )
         
@@ -257,7 +248,6 @@ class TestDescribeCollection:
         
         expected_body = {"collectionName": "test_collection"}
         mock_client.data_plane_api_request.assert_called_once_with(
-            endpoint="https://test.endpoint.com",
             uri="/v2/vectordb/collections/describe",
             cluster_id="cluster1",
             region_id="region1",
@@ -287,7 +277,6 @@ class TestInsertEntities:
         result = await insert_entities(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             data=test_data
         )
@@ -301,7 +290,6 @@ class TestInsertEntities:
             "data": test_data
         }
         mock_client.data_plane_api_request.assert_called_once_with(
-            endpoint="https://test.endpoint.com",
             uri="/v2/vectordb/entities/insert",
             cluster_id="cluster1",
             region_id="region1",
@@ -324,7 +312,6 @@ class TestInsertEntities:
         result = await insert_entities(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             data=test_data
         )
@@ -355,7 +342,6 @@ class TestSearch:
         result = await search(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             data=search_vectors,
             anns_field="vector",
@@ -372,7 +358,6 @@ class TestSearch:
             "limit": 10
         }
         mock_client.data_plane_api_request.assert_called_once_with(
-            endpoint="https://test.endpoint.com",
             uri="/v2/vectordb/entities/search",
             cluster_id="cluster1",
             region_id="region1",
@@ -395,7 +380,6 @@ class TestSearch:
         result = await search(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             data=search_vectors,
             anns_field="vector",
@@ -429,7 +413,6 @@ class TestQuery:
         result = await query(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             filter="id > 0"
         )
@@ -443,7 +426,6 @@ class TestQuery:
             "limit": 100
         }
         mock_client.data_plane_api_request.assert_called_once_with(
-            endpoint="https://test.endpoint.com",
             uri="/v2/vectordb/entities/query",
             cluster_id="cluster1",
             region_id="region1",
@@ -464,7 +446,6 @@ class TestQuery:
         result = await query(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             filter="id > 0",
             limit=100,
@@ -495,7 +476,6 @@ class TestDeleteEntities:
         result = await delete_entities(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             filter="id in [1, 2, 3]"
         )
@@ -508,7 +488,6 @@ class TestDeleteEntities:
             "filter": "id in [1, 2, 3]"
         }
         mock_client.data_plane_api_request.assert_called_once_with(
-            endpoint="https://test.endpoint.com",
             uri="/v2/vectordb/entities/delete",
             cluster_id="cluster1",
             region_id="region1",
@@ -530,7 +509,6 @@ class TestDeleteEntities:
         result = await delete_entities(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             filter="id in [1, 2, 3]",
             db_name="test_db",
@@ -544,7 +522,6 @@ class TestDeleteEntities:
             "partitionName": "test_partition"
         }
         mock_client.data_plane_api_request.assert_called_once_with(
-            endpoint="https://test.endpoint.com",
             uri="/v2/vectordb/entities/delete",
             cluster_id="cluster1",
             region_id="region1",
@@ -596,7 +573,6 @@ class TestHybridSearch:
         result = await hybrid_search(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             search_requests=search_requests,
             rerank_strategy="rrf",
@@ -617,7 +593,6 @@ class TestHybridSearch:
             "limit": 10
         }
         mock_client.data_plane_api_request.assert_called_once_with(
-            endpoint="https://test.endpoint.com",
             uri="/v2/vectordb/entities/hybrid_search",
             cluster_id="cluster1",
             region_id="region1",
@@ -655,7 +630,6 @@ class TestHybridSearch:
         result = await hybrid_search(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             search_requests=search_requests,
             rerank_strategy="weighted",
@@ -684,7 +658,6 @@ class TestHybridSearch:
             "consistencyLevel": "Strong"
         }
         mock_client.data_plane_api_request.assert_called_once_with(
-            endpoint="https://test.endpoint.com",
             uri="/v2/vectordb/entities/hybrid_search",
             cluster_id="cluster1",
             region_id="region1",
@@ -721,7 +694,6 @@ class TestHybridSearch:
         result = await hybrid_search(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             search_requests=search_requests,
             rerank_strategy="rrf",
@@ -757,7 +729,6 @@ class TestHybridSearch:
         result = await hybrid_search(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             search_requests=search_requests,
             rerank_strategy="rrf",
@@ -788,8 +759,7 @@ class TestHybridSearch:
             await hybrid_search(
                 cluster_id="cluster1",
                 region_id="region1",
-                endpoint="https://test.endpoint.com",
-                collection_name="test_collection",
+                    collection_name="test_collection",
                 search_requests=search_requests,
                 rerank_strategy="rrf",
                 rerank_params={"k": 10},
@@ -833,7 +803,6 @@ class TestHybridSearch:
         result = await hybrid_search(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             search_requests=search_requests,
             rerank_strategy="rrf",
@@ -876,7 +845,6 @@ class TestHybridSearch:
         result = await hybrid_search(
             cluster_id="cluster1",
             region_id="region1",
-            endpoint="https://test.endpoint.com",
             collection_name="test_collection",
             search_requests=search_requests,
             rerank_strategy="rrf",
@@ -899,7 +867,6 @@ class TestHybridSearch:
             "outputFields": ["id", "category", "title"]
         }
         mock_client.data_plane_api_request.assert_called_once_with(
-            endpoint="https://test.endpoint.com",
             uri="/v2/vectordb/entities/hybrid_search",
             cluster_id="cluster1",
             region_id="region1",
