@@ -12,14 +12,13 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 
 
 @zilliz_mcp.tool()
-async def list_databases(cluster_id: str, region_id: str, endpoint: str) -> str:
+async def list_databases(cluster_id: str, region_id: str) -> str:
     """
     List all databases in the current cluster.
     
     Args:
         cluster_id: ID of the cluster
         region_id: ID of the cloud region hosting the cluster
-        endpoint: The cluster endpoint URL. Can be obtained by calling describe_cluster and using the connect_address field
     Returns:
         List of database names
         Example:
@@ -31,13 +30,12 @@ async def list_databases(cluster_id: str, region_id: str, endpoint: str) -> str:
     """
     try:
         # Log request
-        logger.info(f"LIST_DATABASES: endpoint={endpoint}, cluster_id={cluster_id}")
+        logger.info(f"LIST_DATABASES: cluster_id={cluster_id}")
         
         # Build request body (empty for list databases)
         body = {}
         
         response = openapi_client.data_plane_api_request(
-            endpoint=endpoint,
             uri="/v2/vectordb/databases/list",
             cluster_id=cluster_id,
             region_id=region_id,
@@ -59,14 +57,13 @@ async def list_databases(cluster_id: str, region_id: str, endpoint: str) -> str:
 
 
 @zilliz_mcp.tool()
-async def list_collections(cluster_id: str, region_id: str, endpoint: str, db_name: str = "") -> str:
+async def list_collections(cluster_id: str, region_id: str, db_name: str = "") -> str:
     """
     List all collection names in the specified database.
     
     Args:
         cluster_id: ID of the cluster
         region_id: ID of the cloud region hosting the cluster
-        endpoint: The cluster endpoint URL. Can be obtained by calling describe_cluster and using the connect_address field
         db_name: The name of an existing database. Pass explicit dbName or leave empty when cluster is free or serverless
     Returns:
         JSON string containing list of collection names
@@ -82,10 +79,9 @@ async def list_collections(cluster_id: str, region_id: str, endpoint: str, db_na
             body["dbName"] = db_name
         
         # Log request
-        logger.info(f"LIST_COLLECTIONS: endpoint={endpoint}, cluster_id={cluster_id}, db_name={db_name}")
+        logger.info(f"LIST_COLLECTIONS: cluster_id={cluster_id}, db_name={db_name}")
         
         response = openapi_client.data_plane_api_request(
-            endpoint=endpoint,
             uri="/v2/vectordb/collections/list",
             cluster_id=cluster_id,
             region_id=region_id,
@@ -113,7 +109,6 @@ async def list_collections(cluster_id: str, region_id: str, endpoint: str, db_na
 async def create_collection(
     cluster_id: str, 
     region_id: str, 
-    endpoint: str,
     collection_name: str, 
     dimension: int,
     db_name: str = "",
@@ -129,7 +124,6 @@ async def create_collection(
     Args:
         cluster_id: ID of the cluster
         region_id: ID of the cloud region hosting the cluster
-        endpoint: The cluster endpoint URL. Can be obtained by calling describe_cluster and using the connect_address field
         collection_name: The name of the collection to create
         dimension: The number of dimensions a vector value should have
         db_name: The name of the database. Pass explicit dbName or leave empty when cluster is free or serverless
@@ -173,7 +167,6 @@ async def create_collection(
             }
         
         response = openapi_client.data_plane_api_request(
-            endpoint=endpoint,
             uri="/v2/vectordb/collections/create",
             cluster_id=cluster_id,
             region_id=region_id,
@@ -195,7 +188,6 @@ async def create_collection(
 async def describe_collection(
     cluster_id: str, 
     region_id: str, 
-    endpoint: str,
     collection_name: str,
     db_name: str = ""
 ) -> str:
@@ -205,7 +197,6 @@ async def describe_collection(
     Args:
         cluster_id: ID of the cluster
         region_id: ID of the cloud region hosting the cluster
-        endpoint: The cluster endpoint URL. Can be obtained by calling describe_cluster and using the connect_address field
         collection_name: The name of the collection to describe
         db_name: The name of the database. Pass explicit dbName or leave empty when cluster is free or serverless
     Returns:
@@ -275,7 +266,6 @@ async def describe_collection(
             body["dbName"] = db_name
         
         response = openapi_client.data_plane_api_request(
-            endpoint=endpoint,
             uri="/v2/vectordb/collections/describe",
             cluster_id=cluster_id,
             region_id=region_id,
@@ -299,7 +289,6 @@ async def describe_collection(
 async def insert_entities(
     cluster_id: str,
     region_id: str, 
-    endpoint: str,
     collection_name: str,
     data: Union[Dict[str, Any], List[Dict[str, Any]]],
     db_name: str = ""
@@ -310,7 +299,6 @@ async def insert_entities(
     Args:
         cluster_id: ID of the cluster
         region_id: ID of the cloud region hosting the cluster
-        endpoint: The cluster endpoint URL. Can be obtained by calling describe_cluster and using the connect_address field
         collection_name: The name of an existing collection
         data: An entity object or an array of entity objects. Note that the keys in an entity object should match the collection schema
         db_name: The name of the target database. Pass explicit dbName or leave empty when cluster is free or serverless
@@ -342,7 +330,6 @@ async def insert_entities(
             body["dbName"] = db_name
         
         response = openapi_client.data_plane_api_request(
-            endpoint=endpoint,
             uri="/v2/vectordb/entities/insert",
             cluster_id=cluster_id,
             region_id=region_id,
@@ -366,7 +353,6 @@ async def insert_entities(
 async def delete_entities(
     cluster_id: str,
     region_id: str,
-    endpoint: str,
     collection_name: str,
     filter: str,
     db_name: str = "",
@@ -378,7 +364,6 @@ async def delete_entities(
     Args:
         cluster_id: ID of the cluster
         region_id: ID of the cloud region hosting the cluster
-        endpoint: The cluster endpoint URL. Can be obtained by calling describe_cluster and using the connect_address field
         collection_name: The name of an existing collection
         filter: A scalar filtering condition to filter matching entities. You can set this parameter to an empty string to skip scalar filtering. To build a scalar filtering condition, refer to Reference on Scalar Filters
         db_name: The name of the target database. Pass explicit dbName or leave empty when cluster is free or serverless
@@ -412,7 +397,6 @@ async def delete_entities(
             body["partitionName"] = partition_name
         
         response = openapi_client.data_plane_api_request(
-            endpoint=endpoint,
             uri="/v2/vectordb/entities/delete",
             cluster_id=cluster_id,
             region_id=region_id,
@@ -434,7 +418,6 @@ async def delete_entities(
 async def search(
     cluster_id: str,
     region_id: str,
-    endpoint: str,
     collection_name: str,
     data: List[List[float]],
     anns_field: str,
@@ -455,7 +438,6 @@ async def search(
     Args:
         cluster_id: ID of the cluster
         region_id: ID of the cloud region hosting the cluster
-        endpoint: The cluster endpoint URL. Can be obtained by calling describe_cluster and using the connect_address field
         collection_name: The name of the collection to which this operation applies
         data: A list of vector embeddings. Zilliz Cloud searches for the most similar vector embeddings to the specified ones
         anns_field: The name of the vector field
@@ -540,7 +522,6 @@ async def search(
             body["consistencyLevel"] = consistency_level
         
         response = openapi_client.data_plane_api_request(
-            endpoint=endpoint,
             uri="/v2/vectordb/entities/search",
             cluster_id=cluster_id,
             region_id=region_id,
@@ -564,7 +545,6 @@ async def search(
 async def query(
     cluster_id: str,
     region_id: str,
-    endpoint: str,
     collection_name: str,
     filter: str,
     db_name: str = "",
@@ -579,7 +559,6 @@ async def query(
     Args:
         cluster_id: ID of the cluster
         region_id: ID of the cloud region hosting the cluster
-        endpoint: The cluster endpoint URL. Can be obtained by calling describe_cluster and using the connect_address field
         collection_name: The name of the collection to which this operation applies
         filter: The filter used to find matches for the search
         db_name: The name of the database. Pass explicit dbName or leave empty when cluster is free or serverless
@@ -639,7 +618,6 @@ async def query(
             body["offset"] = offset
         
         response = openapi_client.data_plane_api_request(
-            endpoint=endpoint,
             uri="/v2/vectordb/entities/query",
             cluster_id=cluster_id,
             region_id=region_id,
@@ -663,7 +641,6 @@ async def query(
 async def hybrid_search(
     cluster_id: str,
     region_id: str,
-    endpoint: str,
     collection_name: str,
     search_requests: List[Dict[str, Any]],
     rerank_strategy: str,
@@ -680,7 +657,6 @@ async def hybrid_search(
     Args:
         cluster_id: ID of the cluster
         region_id: ID of the cloud region hosting the cluster
-        endpoint: The cluster endpoint URL. Can be obtained by calling describe_cluster and using the connect_address field
         collection_name: The name of the collection to which this operation applies
         search_requests: List of search parameters for different vector fields. Each search request should contain:
             - data: A list of vector embeddings
@@ -750,7 +726,6 @@ async def hybrid_search(
             body["consistencyLevel"] = consistency_level
         
         response = openapi_client.data_plane_api_request(
-            endpoint=endpoint,
             uri="/v2/vectordb/entities/hybrid_search",
             cluster_id=cluster_id,
             region_id=region_id,
