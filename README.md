@@ -96,7 +96,7 @@ cp example.env .env
 Now, open `.env` and add your API key:
 
 ```
-ZILLIZ_API_KEY="your_api_key_here"
+ZILLIZ_CLOUD_TOKEN="your_api_key_here"
 ```
 
 It 'll start the MCP server as a standalone HTTP service
