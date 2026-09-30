@@ -138,6 +138,17 @@ These tools are for managing your Zilliz Cloud resources.
 | `resume_cluster`        | Resume a suspended cluster.                |
 | `query_cluster_metrics` | Query various performance metrics for a cluster.     |
 
+### Zilliz Billing Tools
+
+These tools report usage costs and invoices for your organization. They require an API key belonging to an **Organization Owner** or **Billing Admin**.
+
+| Tool Name             | Description                                                              |
+| --------------------- | ------------------------------------------------------------------------ |
+| `get_usage_summary`   | Summarize costs over a date range (up to 366 days), grouped by cluster, project, cost type, region or day. |
+| `query_daily_usage`   | Get raw daily usage line items for a date range (up to 7 days).          |
+| `list_invoices`       | List the organization's invoices.                                        |
+| `describe_invoice`    | Get detailed information about a specific invoice.                       |
+
 ### Milvus Data Plane Tools
 
 These tools are for interacting with the data inside a Milvus cluster.
