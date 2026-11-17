@@ -20,6 +20,10 @@ Ensure you have the following prerequisites:
 ![API Keys Access](imgs/api_key_access.PNG)
 
 > **Note**: If you don't need fine-grained permission control for now—such as restricting a token to access only a specific project or instance—you can consider granting the API key Owner permissions at the Organization level to quickly test Zilliz-mcp-server.
+>
+> The billing tools (`get_usage_summary`, `query_daily_usage`, `list_invoices`, `describe_invoice`, `compare_billing_periods`) require an API key belonging to an Organization **Owner** or **Billing Admin**; other keys get a `PERMISSION_DENIED` error that says what to grant, who can grant it, where, and which call to retry.
+>
+> To let an agent read but never change anything, set `ZILLIZ_MCP_READ_ONLY=true` in the server's environment: the 6 tools that create, change or delete resources or data are then not registered (see the README).
 
 ![API Key Permissions](imgs/api_key_permissions.PNG)
 

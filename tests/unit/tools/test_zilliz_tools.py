@@ -34,7 +34,7 @@ class TestListProjects:
         mock_client.control_plane_api_request.return_value = sample_project_response
         
         result = await list_projects()
-        result_data = json.loads(result)
+        result_data = json.loads(result)["data"]
         
         assert len(result_data) == 1
         assert result_data[0]['project_name'] == 'Test Project'
@@ -51,7 +51,7 @@ class TestListProjects:
         mock_client.control_plane_api_request.return_value = {"code": 0, "data": []}
         
         result = await list_projects()
-        result_data = json.loads(result)
+        result_data = json.loads(result)["data"]
         
         assert result_data == []
 
@@ -62,7 +62,7 @@ class TestListProjects:
         
         mock_client.control_plane_api_request.side_effect = Exception("API Error")
         
-        with pytest.raises(Exception, match="Failed to get projects info: API Error"):
+        with pytest.raises(Exception, match="API Error"):
             await list_projects()
 
     @patch('zilliz_mcp_server.tools.zilliz.zilliz_tools.openapi_client')
@@ -82,7 +82,7 @@ class TestListProjects:
         mock_client.control_plane_api_request.return_value = incomplete_response
         
         result = await list_projects()
-        result_data = json.loads(result)
+        result_data = json.loads(result)["data"]
         
         assert len(result_data) == 1
         assert result_data[0]['project_name'] == 'Test Project'
@@ -101,7 +101,7 @@ class TestListClusters:
         mock_client.control_plane_api_request.return_value = sample_cluster_response
         
         result = await list_clusters(page_size=5, current_page=1)
-        result_data = json.loads(result)
+        result_data = json.loads(result)["data"]
         
         assert len(result_data) == 1
         assert result_data[0]['cluster_id'] == 'in01-test123'
@@ -148,7 +148,7 @@ class TestCreateFreeCluster:
         }
         
         result = await create_free_cluster("test-cluster", "proj-test123")
-        result_data = json.loads(result)
+        result_data = json.loads(result)["data"]
         
         assert result_data['cluster_id'] == 'in01-test123'
         assert result_data['username'] == 'db_test123'
@@ -174,7 +174,7 @@ class TestCreateFreeCluster:
         mock_config.free_cluster_region = "gcp-us-west1"
         mock_client.control_plane_api_request.side_effect = Exception("Cluster creation failed")
         
-        with pytest.raises(Exception, match="Failed to create free cluster: Cluster creation failed"):
+        with pytest.raises(Exception, match="Cluster creation failed"):
             await create_free_cluster("test-cluster", "proj-test123")
 
 
@@ -198,7 +198,7 @@ class TestDescribeCluster:
         mock_client.control_plane_api_request.return_value = mock_response
         
         result = await describe_cluster("in01-test123")
-        result_data = json.loads(result)
+        result_data = json.loads(result)["data"]
         
         assert result_data['cluster_id'] == 'in01-test123'
         assert result_data['cluster_name'] == 'test-cluster'
@@ -214,7 +214,7 @@ class TestDescribeCluster:
         
         mock_client.control_plane_api_request.side_effect = Exception("Cluster not found")
         
-        with pytest.raises(Exception, match="Failed to describe cluster: Cluster not found"):
+        with pytest.raises(Exception, match="CLUSTER_NOT_FOUND"):
             await describe_cluster("nonexistent-cluster")
 
 
@@ -235,8 +235,8 @@ class TestSuspendCluster:
         }
         mock_client.control_plane_api_request.return_value = mock_response
         
-        result = await suspend_cluster("in01-test123")
-        result_data = json.loads(result)
+        result = await suspend_cluster("in01-test123", confirm=True)
+        result_data = json.loads(result)["data"]
         
         assert result_data['cluster_id'] == 'in01-test123'
         assert 'suspension' in result_data['prompt']
@@ -265,7 +265,7 @@ class TestResumeCluster:
         mock_client.control_plane_api_request.return_value = mock_response
         
         result = await resume_cluster("in01-test123")
-        result_data = json.loads(result)
+        result_data = json.loads(result)["data"]
         
         assert result_data['cluster_id'] == 'in01-test123'
         assert 'resumption' in result_data['prompt']
@@ -315,9 +315,9 @@ class TestQueryClusterMetrics:
             granularity="PT1M",
             metric_queries=metric_queries
         )
-        result_data = json.loads(result)
+        result_data = json.loads(result)["data"]
         
-        assert result_data == mock_response
+        assert result_data == mock_response["data"]
         expected_body = {
             "granularity": "PT1M",
             "start": "2024-06-30T16:00:00Z",
@@ -366,9 +366,9 @@ class TestQueryClusterMetrics:
             period="PT1H",
             metric_queries=metric_queries
         )
-        result_data = json.loads(result)
+        result_data = json.loads(result)["data"]
         
-        assert result_data == mock_response
+        assert result_data == mock_response["data"]
         expected_body = {
             "granularity": "PT30S",
             "period": "PT1H",
@@ -418,9 +418,9 @@ class TestQueryClusterMetrics:
             period="PT1H",
             metric_queries=metric_queries
         )
-        result_data = json.loads(result)
+        result_data = json.loads(result)["data"]
         
-        assert result_data == mock_response
+        assert result_data == mock_response["data"]
         expected_body = {
             "granularity": "PT30S",
             "period": "PT1H",
@@ -454,17 +454,18 @@ class TestQueryClusterMetrics:
     async def test_query_cluster_metrics_invalid_metric_query(self, mock_client):
         """Test cluster metrics query with invalid metric query format."""
         from zilliz_mcp_server.tools.zilliz.zilliz_tools import query_cluster_metrics
-        
+
         metric_queries = [
-            {"metricName": "CU_COMPUTATION"}  # Missing 'stat'
+            {"stat": "AVG"}  # Missing 'metricName'
         ]
-        
-        with pytest.raises(Exception, match="Each metric query must contain 'metricName' and 'stat' fields"):
+
+        with pytest.raises(Exception, match="Each metric query must be an object with 'metricName'"):
             await query_cluster_metrics(
                 cluster_id="in01-test123",
                 period="PT1H",
                 metric_queries=metric_queries
             )
+        mock_client.control_plane_api_request.assert_not_called()
 
     @patch('zilliz_mcp_server.tools.zilliz.zilliz_tools.openapi_client')
     async def test_query_cluster_metrics_api_error(self, mock_client):
@@ -477,7 +478,7 @@ class TestQueryClusterMetrics:
             {"metricName": "CU_COMPUTATION", "stat": "AVG"}
         ]
         
-        with pytest.raises(Exception, match="Failed to query cluster metrics: API Error"):
+        with pytest.raises(Exception, match="API Error"):
             await query_cluster_metrics(
                 cluster_id="in01-test123",
                 period="PT1H",
@@ -486,32 +487,13 @@ class TestQueryClusterMetrics:
 
     @patch('zilliz_mcp_server.tools.zilliz.zilliz_tools.openapi_client')
     async def test_query_cluster_metrics_empty_metric_queries(self, mock_client):
-        """Test cluster metrics query with empty metric queries list."""
+        """Empty metric queries are rejected locally with the list of valid names."""
         from zilliz_mcp_server.tools.zilliz.zilliz_tools import query_cluster_metrics
-        
-        mock_response = {
-            "code": 0,
-            "data": {
-                "results": []
-            }
-        }
-        mock_client.control_plane_api_request.return_value = mock_response
-        
-        result = await query_cluster_metrics(
-            cluster_id="in01-test123",
-            period="PT1H",
-            metric_queries=[]
-        )
-        result_data = json.loads(result)
-        
-        assert result_data == mock_response
-        expected_body = {
-            "granularity": "PT30S",
-            "period": "PT1H",
-            "metricQueries": []
-        }
-        mock_client.control_plane_api_request.assert_called_once_with(
-            "/v2/clusters/in01-test123/metrics/query",
-            body_map=expected_body,
-            method="POST"
-        ) 
+
+        with pytest.raises(Exception, match="metric_queries is empty.*Valid metric names"):
+            await query_cluster_metrics(
+                cluster_id="in01-test123",
+                period="PT1H",
+                metric_queries=[]
+            )
+        mock_client.control_plane_api_request.assert_not_called()

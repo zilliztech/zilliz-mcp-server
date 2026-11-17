@@ -96,7 +96,7 @@ cp example.env .env
 Now, open `.env` and add your API key:
 
 ```
-ZILLIZ_API_KEY="your_api_key_here"
+ZILLIZ_CLOUD_TOKEN="your_api_key_here"
 ```
 
 It 'll start the MCP server as a standalone HTTP service
@@ -120,36 +120,60 @@ You can then configure your agent or MCP client to connect to it using a configu
 }
 ```
 
+### 4.3. Read-only mode
+
+Set `ZILLIZ_MCP_READ_ONLY=true` in the server's environment to expose only tools that read data. The tools that create, change or delete resources or data (`create_free_cluster`, `suspend_cluster`, `resume_cluster`, `create_collection`, `insert_entities`, `delete_entities`) are then not registered, so the agent cannot see or call them.
+
+In normal mode, every tool carries MCP tool annotations (`readOnlyHint`, `destructiveHint`) so clients can ask the user before a write. `suspend_cluster` and `delete_entities` also need a second call with `confirm=true`: the first call only returns a preview and the impact.
+
 ## 5. Available Tools
 
-The server exposes two categories of tools for your AI agents.
+The server exposes 23 tools. In read-only mode (`ZILLIZ_MCP_READ_ONLY=true`) the 17 tools marked
+"yes" in the Read-only column stay available and the 6 write tools are not registered.
+
+Every tool returns a JSON text payload `{"notes": [...], "next_steps": [...], "data": ...}`; errors
+return `{"error", "message", "field", "expected", "got", "fix", "next_steps"}`.
 
 ### Zilliz Control Plane Tools
 
 These tools are for managing your Zilliz Cloud resources.
 
-| Tool Name             | Description                                          |
-| --------------------- | ---------------------------------------------------- |
-| `list_projects`         | List all projects in your Zilliz Cloud account.      |
-| `list_clusters`         | List all clusters within your projects.              |
-| `create_free_cluster`   | Create a new, free-tier Milvus cluster.              |
-| `describe_cluster`      | Get detailed information about a specific cluster.   |
-| `suspend_cluster`       | Suspend a running cluster to save costs.   |
-| `resume_cluster`        | Resume a suspended cluster.                |
-| `query_cluster_metrics` | Query various performance metrics for a cluster.     |
+| Tool Name | Description | Read-only |
+| --- | --- | --- |
+| `list_projects` | List all projects in your Zilliz Cloud account. | yes |
+| `list_clusters` | List all clusters within your projects. | yes |
+| `create_free_cluster` | Create a new, free-tier Milvus cluster. | no |
+| `describe_cluster` | Get detailed information about a specific cluster. | yes |
+| `suspend_cluster` | Suspend a running cluster to save costs (preview first; acts only with `confirm=true`). | no |
+| `resume_cluster` | Resume a suspended cluster. | no |
+| `query_cluster_metrics` | Query performance metrics for a cluster, with null runs, coverage notes and finer re-query suggestions. | yes |
+| `get_cluster_health` | Cluster status plus key metrics, each assessed with its basis and compared with the previous window. | yes |
+| `get_cluster_activity_history` | Which days had requests, over up to 180 days, in one compact result. | yes |
+
+### Zilliz Billing Tools
+
+These tools report usage costs and invoices for your organization. They require an API key belonging to an **Organization Owner** or **Billing Admin**. Without that permission they return a `PERMISSION_DENIED` error that says what to grant, who can grant it, where, and which call to retry.
+
+| Tool Name | Description | Read-only |
+| --- | --- | --- |
+| `get_usage_summary` | Summarize costs over a date range (up to 366 days), grouped by cluster, project, cost type, region, day or month. | yes |
+| `query_daily_usage` | Get raw daily usage line items for a date range (up to 7 days). | yes |
+| `list_invoices` | List the organization's invoices. | yes |
+| `describe_invoice` | Get detailed information about a specific invoice. | yes |
+| `compare_billing_periods` | Explain a bill change between two periods by cluster and cost type, quantity vs price, and credits. | yes |
 
 ### Milvus Data Plane Tools
 
 These tools are for interacting with the data inside a Milvus cluster.
 
-| Tool Name             | Description                                                              |
-| --------------------- | ------------------------------------------------------------------------ |
-| `list_databases`        | List all databases within a specific cluster.                            |
-| `list_collections`      | List all collections within a database.                                  |
-| `create_collection`     | Create a new collection with a specified schema.                         |
-| `describe_collection`   | Get detailed information about a collection, including its schema.       |
-| `insert_entities`       | Insert entities (data records with vectors) into a collection.           |
-| `delete_entities`       | Delete entities from a collection based on IDs or a filter expression.   |
-| `search`                | Perform a vector similarity search on a collection.                      |
-| `query`                 | Query entities based on a scalar filter expression.                      |
-| `hybrid_search`         | Perform a hybrid search combining vector similarity and scalar filters.  |
+| Tool Name | Description | Read-only |
+| --- | --- | --- |
+| `list_databases` | List all databases within a specific cluster. | yes |
+| `list_collections` | List all collections within a database. | yes |
+| `create_collection` | Create a new collection with a specified schema. | no |
+| `describe_collection` | Get detailed information about a collection, including its schema and row count. | yes |
+| `insert_entities` | Insert entities (data records with vectors) into a collection. | no |
+| `delete_entities` | Delete entities from a collection by IDs or a filter expression (preview first; acts only with `confirm=true`). | no |
+| `search` | Perform a vector similarity search on a collection. | yes |
+| `query` | Query entities based on a scalar filter expression (vectors left out by default). | yes |
+| `hybrid_search` | Perform a hybrid search combining vector similarity and scalar filters. | yes |

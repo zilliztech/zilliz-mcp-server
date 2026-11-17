@@ -4,6 +4,7 @@ from requests.exceptions import HTTPError
 from typing import Dict, Any, Optional
 from urllib.parse import urljoin, urlparse
 from zilliz_mcp_server.settings import config
+from zilliz_mcp_server.common.hints import ZillizAPIError
 
 # Public Zilliz Cloud data-plane host suffixes. A leading dot is required so
 # lookalikes such as "notzillizcloud.com" cannot match.
@@ -11,6 +12,11 @@ _ALLOWED_DATA_PLANE_HOST_SUFFIXES = (
     ".zillizcloud.com",
     ".zilliz.com.cn",
 )
+
+# (connect, read) timeout in seconds for every HTTP call, so a slow or stalled
+# API response cannot hang the MCP tool call indefinitely. Large usage queries
+# can take a while to return, hence the generous read timeout.
+REQUEST_TIMEOUT = (10, 120)
 
 
 def _get_headers() -> Dict[str, str]:
@@ -41,9 +47,25 @@ def _parse_response(response) -> Dict[str, Any]:
     # Check business code, raise business exception if code != 0
     if 'code' in json_data and json_data['code'] != 0:
         error_message = json_data.get('message', 'Unknown business error')
-        raise Exception(f"Business error: {error_message}")
+        raise ZillizAPIError(error_message, code=json_data['code'])
     
     return json_data
+
+
+def _raise_for_status(response) -> None:
+    """Raise HTTPError, annotated with the API's error code/message when the body has them."""
+    try:
+        response.raise_for_status()
+    except HTTPError as e:
+        e.http_status = response.status_code
+        try:
+            body = response.json()
+            if isinstance(body, dict):
+                e.code = body.get('code')
+                e.api_message = body.get('message')
+        except Exception:
+            pass
+        raise
 
 
 def _is_ip_address(host: str) -> bool:
@@ -127,24 +149,24 @@ def _resolve_cluster_endpoint(cluster_id: str, region_id: str) -> str:
 def get(url: str, params_map: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """GET request interface"""
     headers = _get_headers()
-    response = requests.get(url, params=params_map, headers=headers)
-    response.raise_for_status()
+    response = requests.get(url, params=params_map, headers=headers, timeout=REQUEST_TIMEOUT)
+    _raise_for_status(response)
     return _parse_response(response)
 
 
 def post(url: str, params_map: Optional[Dict[str, Any]] = None, body_map: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """POST request interface"""
     headers = _get_headers()
-    response = requests.post(url, params=params_map, json=body_map, headers=headers)
-    response.raise_for_status()
+    response = requests.post(url, params=params_map, json=body_map, headers=headers, timeout=REQUEST_TIMEOUT)
+    _raise_for_status(response)
     return _parse_response(response)
 
 
 def delete(url: str, params_map: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """DELETE request interface"""
     headers = _get_headers()
-    response = requests.delete(url, params=params_map, headers=headers)
-    response.raise_for_status()
+    response = requests.delete(url, params=params_map, headers=headers, timeout=REQUEST_TIMEOUT)
+    _raise_for_status(response)
     return _parse_response(response)
 
 

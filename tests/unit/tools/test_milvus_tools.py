@@ -69,7 +69,7 @@ class TestListDatabases:
         }
         
         result = await list_databases("cluster1", "region1")
-        result_data = json.loads(result)
+        result_data = json.loads(result)["data"]
         
         assert result_data == ["default", "test_db"]
         mock_client.data_plane_api_request.assert_called_once_with(
@@ -87,7 +87,7 @@ class TestListDatabases:
         
         mock_client.data_plane_api_request.side_effect = Exception("Connection failed")
         
-        with pytest.raises(Exception, match="Failed to list databases: Connection failed"):
+        with pytest.raises(Exception, match="Connection failed"):
             await list_databases("cluster1", "region1")
 
 
@@ -105,7 +105,7 @@ class TestListCollections:
         }
         
         result = await list_collections("cluster1", "region1", "test_db")
-        result_data = json.loads(result)
+        result_data = json.loads(result)["data"]
         
         assert result_data == ["collection1", "collection2"]
         mock_client.data_plane_api_request.assert_called_once_with(
@@ -154,8 +154,8 @@ class TestCreateCollection:
             dimension=128
         )
         
-        result_data = json.loads(result)
-        assert result_data == {"code": 0, "data": {}}
+        result_data = json.loads(result)["data"]
+        assert result_data == {}
         
         expected_body = {
             "collectionName": "test_collection",
@@ -235,7 +235,10 @@ class TestDescribeCollection:
         """Test successful collection description."""
         from zilliz_mcp_server.tools.milvus.milvus_tools import describe_collection
         
-        mock_client.data_plane_api_request.return_value = sample_collection_response
+        mock_client.data_plane_api_request.side_effect = [
+            sample_collection_response,
+            {"code": 0, "data": {"rowCount": 20000}},
+        ]
         
         result = await describe_collection(
             cluster_id="cluster1",
@@ -243,17 +246,30 @@ class TestDescribeCollection:
             collection_name="test_collection"
         )
         
-        result_data = json.loads(result)
-        assert result_data == sample_collection_response
+        result_data = json.loads(result)["data"]
+        assert result_data == {**sample_collection_response["data"], "rowCount": 20000}
         
         expected_body = {"collectionName": "test_collection"}
-        mock_client.data_plane_api_request.assert_called_once_with(
-            uri="/v2/vectordb/collections/describe",
-            cluster_id="cluster1",
-            region_id="region1",
-            body_map=expected_body,
-            method="POST"
-        )
+        calls = mock_client.data_plane_api_request.call_args_list
+        assert len(calls) == 2
+        assert calls[0].kwargs == dict(uri="/v2/vectordb/collections/describe", cluster_id="cluster1",
+                                       region_id="region1", body_map=expected_body, method="POST")
+        assert calls[1].kwargs == dict(uri="/v2/vectordb/collections/get_stats", cluster_id="cluster1",
+                                       region_id="region1", body_map=expected_body, method="POST")
+
+    @patch('zilliz_mcp_server.tools.milvus.milvus_tools.openapi_client')
+    async def test_describe_collection_stats_failure_keeps_schema(self, mock_client, sample_collection_response):
+        """get_stats failing must not fail describe; rowCount is omitted and a note explains the fallback."""
+        from zilliz_mcp_server.tools.milvus.milvus_tools import describe_collection
+
+        mock_client.data_plane_api_request.side_effect = [sample_collection_response, Exception("boom")]
+        result = json.loads(await describe_collection(
+            cluster_id="cluster1", region_id="region1", collection_name="test_collection", db_name="db1"))
+        assert "rowCount" not in result["data"]
+        assert result["data"]["collectionName"] == sample_collection_response["data"]["collectionName"]
+        assert any("rowCount unavailable" in n and "count(*)" in n for n in result["notes"])
+        assert mock_client.data_plane_api_request.call_args_list[1].kwargs["body_map"] == {
+            "collectionName": "test_collection", "dbName": "db1"}
 
 
 class TestInsertEntities:
@@ -281,9 +297,9 @@ class TestInsertEntities:
             data=test_data
         )
         
-        result_data = json.loads(result)
-        assert result_data["data"]["insertCount"] == 2
-        assert result_data["data"]["insertIds"] == [1, 2]
+        result_data = json.loads(result)["data"]
+        assert result_data["insertCount"] == 2
+        assert result_data["insertIds"] == [1, 2]
         
         expected_body = {
             "collectionName": "test_collection",
@@ -348,8 +364,8 @@ class TestSearch:
             limit=10
         )
         
-        result_data = json.loads(result)
-        assert len(result_data["data"]) == 2
+        result_data = json.loads(result)["data"]
+        assert len(result_data) == 2
         
         expected_body = {
             "collectionName": "test_collection",
@@ -417,15 +433,18 @@ class TestQuery:
             filter="id > 0"
         )
         
-        result_data = json.loads(result)
-        assert len(result_data["data"]) == 2
+        result_data = json.loads(result)["data"]
+        assert len(result_data) == 2
         
         expected_body = {
             "collectionName": "test_collection",
             "filter": "id > 0",
             "limit": 100
         }
-        mock_client.data_plane_api_request.assert_called_once_with(
+        # Without output_fields the tool first reads the schema (to leave vectors out); this mock's
+        # describe response has no field list, so the API default output is kept.
+        assert mock_client.data_plane_api_request.call_count == 2
+        mock_client.data_plane_api_request.assert_called_with(
             uri="/v2/vectordb/entities/query",
             cluster_id="cluster1",
             region_id="region1",
@@ -477,11 +496,12 @@ class TestDeleteEntities:
             cluster_id="cluster1",
             region_id="region1",
             collection_name="test_collection",
-            filter="id in [1, 2, 3]"
+            filter="id in [1, 2, 3]",
+            confirm=True
         )
         
-        result_data = json.loads(result)
-        assert result_data["code"] == 0
+        result_data = json.loads(result)["data"]
+        assert result_data == {}
         
         expected_body = {
             "collectionName": "test_collection",
@@ -512,7 +532,8 @@ class TestDeleteEntities:
             collection_name="test_collection",
             filter="id in [1, 2, 3]",
             db_name="test_db",
-            partition_name="test_partition"
+            partition_name="test_partition",
+            confirm=True
         )
         
         expected_body = {
@@ -580,8 +601,8 @@ class TestHybridSearch:
             limit=10
         )
         
-        result_data = json.loads(result)
-        assert result_data == mock_response
+        result_data = json.loads(result)["data"]
+        assert result_data == mock_response["data"]
         
         expected_body = {
             "collectionName": "test_collection",
@@ -641,8 +662,8 @@ class TestHybridSearch:
             consistency_level="Strong"
         )
         
-        result_data = json.loads(result)
-        assert result_data == mock_response
+        result_data = json.loads(result)["data"]
+        assert result_data == mock_response["data"]
         
         expected_body = {
             "collectionName": "test_collection",
@@ -701,9 +722,9 @@ class TestHybridSearch:
             limit=5
         )
         
-        result_data = json.loads(result)
-        assert result_data == mock_response
-        assert len(result_data["data"]) == 1
+        result_data = json.loads(result)["data"]
+        assert result_data == mock_response["data"]
+        assert len(result_data) == 1
 
     @patch('zilliz_mcp_server.tools.milvus.milvus_tools.openapi_client')
     async def test_hybrid_search_empty_results(self, mock_client):
@@ -736,9 +757,9 @@ class TestHybridSearch:
             limit=10
         )
         
-        result_data = json.loads(result)
-        assert result_data == mock_response
-        assert len(result_data["data"]) == 0
+        result_data = json.loads(result)["data"]
+        assert result_data == mock_response["data"]
+        assert len(result_data) == 0
 
     @patch('zilliz_mcp_server.tools.milvus.milvus_tools.openapi_client')
     async def test_hybrid_search_api_error(self, mock_client):
@@ -755,7 +776,7 @@ class TestHybridSearch:
             }
         ]
         
-        with pytest.raises(Exception, match="Failed to perform hybrid search: Connection failed"):
+        with pytest.raises(Exception, match="Connection failed"):
             await hybrid_search(
                 cluster_id="cluster1",
                 region_id="region1",
@@ -810,9 +831,9 @@ class TestHybridSearch:
             limit=10
         )
         
-        result_data = json.loads(result)
-        assert result_data == mock_response
-        assert len(result_data["data"]) == 2
+        result_data = json.loads(result)["data"]
+        assert result_data == mock_response["data"]
+        assert len(result_data) == 2
 
     @patch('zilliz_mcp_server.tools.milvus.milvus_tools.openapi_client')
     async def test_hybrid_search_with_grouping_field(self, mock_client):
@@ -853,8 +874,8 @@ class TestHybridSearch:
             output_fields=["id", "category", "title"]
         )
         
-        result_data = json.loads(result)
-        assert result_data == mock_response
+        result_data = json.loads(result)["data"]
+        assert result_data == mock_response["data"]
         
         expected_body = {
             "collectionName": "test_collection",
