@@ -7,9 +7,9 @@ This document describes the testing setup and coverage for the Zilliz MCP Server
 We've implemented a comprehensive unit testing suite that covers the core functionality of the Zilliz MCP Server. The tests focus on the most critical components to ensure reliability and correctness.
 
 ### ✅ Test Statistics
-- **Total Tests**: 62
-- **Test Modules**: 3 main modules
-- **Coverage**: Core functionality (Settings, HTTP Client, API Tools)
+- **Total Tests**: 118
+- **Test Modules**: 5 modules
+- **Coverage**: Core functionality (Settings, HTTP Client, API Tools, Billing Tools)
 - **Framework**: pytest with asyncio support
 
 ## 🧪 Test Structure
@@ -22,11 +22,12 @@ tests/
 ├── unit/
 │   ├── __init__.py
 │   ├── test_settings.py     # Configuration validation tests (12 tests)
-│   ├── test_openapi_client.py  # HTTP client tests (23 tests)
+│   ├── test_openapi_client.py  # HTTP client tests (40 tests)
 │   └── tools/
 │       ├── __init__.py
-│       ├── test_zilliz_tools.py    # Zilliz Cloud API tests (12 tests)
-│       └── test_milvus_tools.py    # Milvus data operations tests (15 tests)
+│       ├── test_zilliz_tools.py    # Zilliz Cloud API tests (19 tests)
+│       ├── test_milvus_tools.py    # Milvus data operations tests (23 tests)
+│       └── test_billing_tools.py   # Billing usage and invoice tests (24 tests)
 ```
 
 ## 🎯 Test Coverage
@@ -73,6 +74,17 @@ tests/
 - ✅ Vector search functionality
 - ✅ Parameter validation and error handling
 
+### 5. Billing Tools Tests (`test_billing_tools.py`)
+**Focus**: Usage and invoice operations
+
+- ✅ Dates sent as midnight-UTC RFC3339, inclusive end day
+- ✅ Date format, order and range-cap validation
+- ✅ Usage summary grouping (cluster, project, cost type, region, day)
+- ✅ Cluster and project filters
+- ✅ Rounding applied only after summing
+- ✅ Invoice listing and field mapping
+- ✅ Error handling
+
 ## 🚀 Running Tests
 
 ### Quick Start
@@ -81,8 +93,10 @@ tests/
 ./run_tests.sh
 
 # Or manually:
-uv run pytest tests/unit/ -v
+ZILLIZ_CLOUD_TOKEN=test uv run --extra test pytest tests/unit/ -v
 ```
+
+> Settings are validated at import time, so `ZILLIZ_CLOUD_TOKEN` must be set (any value) for the tests to load. The tests never call the real API.
 
 ### Specific Test Categories
 ```bash
@@ -94,6 +108,9 @@ uv run pytest tests/unit/test_openapi_client.py -v
 
 # API tools tests only
 uv run pytest tests/unit/tools/ -v
+
+# Billing tools tests only
+uv run pytest tests/unit/tools/test_billing_tools.py -v
 
 # Run tests with coverage
 uv add pytest-cov

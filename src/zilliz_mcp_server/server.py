@@ -22,7 +22,7 @@ def main():
         # Import is done here to make sure environment variables are loaded
         # only after we make the changes.
         from zilliz_mcp_server.app import zilliz_mcp
-        from zilliz_mcp_server.tools.zilliz import zilliz_tools
+        from zilliz_mcp_server.tools.zilliz import zilliz_tools, billing_tools
         from zilliz_mcp_server.tools.milvus import milvus_tools
 
         print(f"📡 Using transport: {args.transport}")
