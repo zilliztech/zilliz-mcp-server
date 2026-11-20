@@ -31,6 +31,10 @@ class ZillizConfig:
             raise ValueError("MCP_SERVER_PORT must be a valid integer")
             
         self.mcp_server_host: str = os.getenv("MCP_SERVER_HOST", "localhost")
+
+        # Read-only mode: when true, tools that create, change or delete resources or data
+        # are not registered.
+        self.read_only: bool = os.getenv("ZILLIZ_MCP_READ_ONLY", "").strip().lower() in ("1", "true", "yes", "on")
         
         # Validate configuration
         self._validate_config()
