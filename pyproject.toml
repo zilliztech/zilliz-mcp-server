@@ -1,6 +1,6 @@
 [project]
 name = "zilliz-mcp-server"
-version = "1.0.0"
+version = "1.0.1"
 description = "MCP server for Zilliz Cloud and Milvus"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -37,6 +37,7 @@ classifiers = [
 ]
 dependencies = [
     "fastmcp>=2.6.1",
+    "mcp>=1.9.3,<2",
     "python-dotenv>=1.0.0",
     "requests>=2.31.0",
 ]

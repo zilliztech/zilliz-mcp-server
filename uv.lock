@@ -1073,10 +1073,11 @@ wheels = [
 
 [[package]]
 name = "zilliz-mcp-server"
-version = "1.0.0"
+version = "1.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
+    { name = "mcp" },
     { name = "python-dotenv" },
     { name = "requests" },
 ]
@@ -1098,6 +1099,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastmcp", specifier = ">=2.6.1" },
+    { name = "mcp", specifier = ">=1.9.3,<2" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.4.1" },
     { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=1.0.0" },
     { name = "pytest-mock", marker = "extra == 'test'", specifier = ">=3.14.1" },
